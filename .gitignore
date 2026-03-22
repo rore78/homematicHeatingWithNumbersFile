@@ -1,0 +1,15 @@
+node_modules/
+npm-debug.log
+yarn-error.log
+.env
+.env.local
+*.log
+.DS_Store
+dist/
+build/
+coverage/
+.nyc_output/
+uploads/
+schedules/
+areas.json
+

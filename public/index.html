@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Homematic IP Heizungssteuerung</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔥 Homematic IP Heizungssteuerung</h1>
+            <p>Lade Excel/Numbers-Dateien hoch, um Zeitpläne für die Heizungssteuerung zu erstellen</p>
+        </header>
+
+        <main>
+            <!-- Upload Bereich -->
+            <section class="upload-section">
+                <h2>Datei hochladen</h2>
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-content">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="17 8 12 3 7 8"></polyline>
+                            <line x1="12" y1="3" x2="12" y2="15"></line>
+                        </svg>
+                        <p>Ziehe eine Datei hierher oder klicke zum Auswählen</p>
+                        <p class="upload-hint">Unterstützt: .xlsx, .xls, .numbers</p>
+                    </div>
+                    <input type="file" id="fileInput" accept=".xlsx,.xls,.numbers" style="display: none;">
+                </div>
+                <div id="uploadStatus" class="upload-status"></div>
+            </section>
+
+            <!-- Vorschau Bereich -->
+            <section class="preview-section" id="previewSection" style="display: none;">
+                <h2>Vorschau</h2>
+                <div class="preview-controls">
+                    <label>
+                        Zeitplan-Name:
+                        <input type="text" id="scheduleName" placeholder="z.B. Winter 2024" required>
+                    </label>
+                    <button id="createScheduleBtn" class="btn btn-primary">Zeitplan erstellen</button>
+                </div>
+                <div class="table-container">
+                    <table id="previewTable">
+                        <thead>
+                            <tr>
+                                <th>Bereich</th>
+                                <th>Startdatum</th>
+                                <th>Enddatum</th>
+                                <th>Temperatur (°C)</th>
+                                <th>Heizprofil</th>
+                                <th>Zusatzinfo</th>
+                            </tr>
+                        </thead>
+                        <tbody id="previewTableBody">
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Bereiche Verwaltung -->
+            <section class="areas-section">
+                <h2>Bereiche verwalten</h2>
+                <div class="area-form">
+                    <input type="text" id="areaName" placeholder="Bereichsname (z.B. Wohnzimmer)">
+                    <input type="text" id="areaDevices" placeholder="Geräte-IDs (kommagetrennt)">
+                    <button id="createAreaBtn" class="btn btn-secondary">Bereich erstellen</button>
+                </div>
+                <div class="areas-list" id="areasList"></div>
+            </section>
+
+            <!-- Zeitpläne Liste -->
+            <section class="schedules-section">
+                <h2>Aktive Zeitpläne</h2>
+                <div class="schedules-list" id="schedulesList"></div>
+            </section>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
+
