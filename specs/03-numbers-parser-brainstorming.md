@@ -129,3 +129,67 @@ Fuer den Test-Vergleich (Numbers vs Excel sollen gleiche Ausgabe liefern) brauch
 - [ ] **Manuell in Numbers exportieren** (Empfohlen) -- Du oeffnest `HmIP-Sondertermine.numbers` in Apple Numbers und exportierst als Excel. Die resultierende .xlsx-Datei wird als `examples/HmIP-Sondertermine.xlsx` eingecheckt.
 - [x] **Programmatisch erzeugen** -- Ein Script erstellt die .xlsx-Datei mit den gleichen Daten. Aufwaendiger, aber reproduzierbar.
 - [ ] **Bereits vorhanden?** -- Pruefen ob es schon eine .xlsx-Variante gibt.
+
+---
+
+## Runde 3: Folgefragen und Implementierungsdetails
+
+### Frage 3.1: xlsx-Upgrade -- Lizenz-Bewertung
+
+Du hast dich fuer ein xlsx-Upgrade entschieden. Ab Version 0.20 hat SheetJS die Lizenz geaendert. Der aktuelle Stand:
+
+```
+Version 0.18.5 (aktuell):  Apache-2.0 -- frei nutzbar
+Version 0.19+:              SheetJS Pro erfordert Lizenz fuer kommerzielle Nutzung
+                            Community Edition ist "source-available" aber nicht Apache-2.0
+
+Alternative: "xlsx-populate", "exceljs" -- kein .numbers-Support
+Alternative: "@paplico/numbers" -- existiert nicht
+```
+
+Da dieses Addon ein privates/Open-Source-Hobby-Projekt ist und nicht kommerziell vertrieben wird, ist die Lizenzfrage wahrscheinlich unkritisch. Trotzdem:
+
+- [x] **Upgrade nur wenn 0.18.5 .numbers nicht kann** (Empfohlen) -- Erst testen ob die aktuelle Version unsere Beispieldatei parsen kann. Nur upgraden wenn es scheitert. Pragmatischer Ansatz.
+- [ ] **Direkt auf neueste Version upgraden** -- Sofort den besten .numbers-Support nutzen, Lizenzfrage ignorieren (privates Projekt).
+- [ ] **Bei 0.18.5 bleiben, egal was** -- Lieber mit Einschraenkungen leben als Lizenzrisiko eingehen.
+
+### Frage 3.2: SpreadsheetParser -- Namenskonvention und Dateistruktur
+
+Bei Variante A (ein Parser fuer alles) muessen wir entscheiden wie die Dateien umstrukturiert werden:
+
+```
+Aktuell:
+  src/parser/excelParser.js      (volle Implementierung)
+  src/parser/numbersParser.js    (Stub)
+
+Option A: Umbenennen
+  src/parser/spreadsheetParser.js   (ExcelParser umbenannt + .numbers-Support)
+  src/parser/excelParser.js         (entfernt)
+  src/parser/numbersParser.js       (entfernt)
+
+Option B: ExcelParser erweitern
+  src/parser/excelParser.js         (erweitert um .numbers-Fehlerbehandlung)
+  src/parser/numbersParser.js       (entfernt)
+```
+
+- [x] **Option A: Neue Datei spreadsheetParser.js** (Empfohlen) -- Sauberer Name der beide Formate reflektiert. Klasse heisst `SpreadsheetParser`. Alte Dateien entfernen. Imports in server.js und index.js aktualisieren.
+- [ ] **Option B: ExcelParser behalten und erweitern** -- Minimale Aenderung, der Name "ExcelParser" ist dann etwas irrefuehrend aber weniger Dateien aendern sich.
+
+### Frage 3.3: Programmatische Testdatei -- Inhalt
+
+Fuer die programmatisch erzeugte .xlsx-Testdatei: Wir muessen zuerst wissen was in `HmIP-Sondertermine.numbers` steht. Da wir die Datei (hoffentlich) mit xlsx parsen koennen, koennen wir:
+
+1. Die .numbers-Datei parsen und die Rohdaten ausgeben
+2. Mit diesen Daten eine .xlsx-Datei erzeugen
+3. Beide als Testfixtures verwenden
+
+Alternativ koennen wir eine minimale Testdatei mit bekannten Daten erstellen:
+
+- [ ] **Minimale Testdatei mit definierten Testdaten** (Empfohlen) -- Eine kleine .xlsx mit 3-5 Zeilen und bekannten Werten (verschiedene Bereiche, Datums-Formate, Temperaturen, Profile). Unabhaengig vom Inhalt der .numbers-Datei. Die .numbers-Datei wird separat getestet (Parsen muss ohne Fehler funktionieren, Ausgabe wird als Snapshot gespeichert).
+- [x] **Exakte Kopie der .numbers-Daten** -- Erst .numbers parsen, dann identische .xlsx erzeugen. Enger gekoppelt, aber staerkerer Vergleichstest.
+- [ ] **Beides** -- Minimale Testdatei fuer Unit-Tests + Snapshot der .numbers-Datei fuer Integrationstest.
+
+### Frage 3.4: Gibt es noch offene Punkte, oder koennen wir zur Spezifikation uebergehen?
+
+- [x] **Alles klar, schreibe die Spezifikation** -- Alle Entscheidungen sind getroffen.
+- [ ] **Weitere Fragen** -- Bitte als Kommentar angeben.
