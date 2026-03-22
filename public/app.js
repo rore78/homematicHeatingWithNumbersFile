@@ -76,7 +76,7 @@ function showPreview(data) {
   previewSection.style.display = "block";
   previewTableBody.innerHTML = "";
 
-  data.forEach((row, index) => {
+  data.forEach((row, _index) => {
     const tr = document.createElement("tr");
 
     const startDate = new Date(row.startDateTime);
@@ -276,7 +276,7 @@ async function loadSchedules() {
         div.className = `schedule-item ${schedule.active ? "active" : ""}`;
 
         const createdAt = new Date(schedule.createdAt);
-        const areas = schedule.areas.map((a) => a.areaName).join(", ");
+        const _areas = schedule.areas.map((a) => a.areaName).join(", ");
 
         div.innerHTML = `
                     <h3>${escapeHtml(schedule.name)}</h3>

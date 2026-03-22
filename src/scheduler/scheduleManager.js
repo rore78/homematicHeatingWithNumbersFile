@@ -1,12 +1,8 @@
 import fs from "fs";
 import path from "path";
-import { fileURLToPath } from "url";
 import { v4 as uuidv4 } from "uuid";
 import HeatingProfile from "./heatingProfile.js";
 import AreaManager from "../areas/areaManager.js";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 const SCHEDULES_DIR = path.join(process.cwd(), "schedules");
 
@@ -106,7 +102,7 @@ export class ScheduleManager {
             row.profile,
             row.temperature,
           );
-        } catch (e) {
+        } catch (_e) {
           // Verwende direkte Temperatur wenn Profil nicht gefunden
         }
       }

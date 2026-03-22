@@ -1,5 +1,4 @@
 import xmlrpc from "xmlrpc";
-import axios from "axios";
 
 /**
  * Lokaler Homematic CCU Client
@@ -23,7 +22,6 @@ export class LocalClient {
    */
   _getClient() {
     if (!this.client) {
-      const protocol = this.useTLS ? "https" : "http";
       const options = {
         host: this.host,
         port: this.port,
@@ -190,7 +188,7 @@ export class LocalClient {
       try {
         const paramset = await this._call("getParamset", [deviceId, "VALUES"]);
         state.parameters = paramset || {};
-      } catch (e) {
+      } catch (_e) {
         // Ignoriere Fehler beim Abrufen der Parameter
       }
 

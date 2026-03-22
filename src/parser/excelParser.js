@@ -161,7 +161,7 @@ export class ExcelParser {
    * @param {number} lineNumber - Zeilennummer für Fehlermeldungen
    * @returns {object} - Geparste Zeile
    */
-  parseRow(row, columnMap, lineNumber) {
+  parseRow(row, columnMap, _lineNumber) {
     const area = row[columnMap.area];
     if (!area) {
       throw new Error("Bereich fehlt");
