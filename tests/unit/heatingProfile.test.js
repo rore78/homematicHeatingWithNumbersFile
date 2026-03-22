@@ -56,15 +56,11 @@ describe("HeatingProfile", () => {
   });
 
   it("createProfile wirft Fehler bei Temperatur ueber 30", () => {
-    expect(() => profile.createProfile("Hot", 31)).toThrow(
-      "0 und 30",
-    );
+    expect(() => profile.createProfile("Hot", 31)).toThrow("0 und 30");
   });
 
   it("createProfile wirft Fehler bei Temperatur unter 0", () => {
-    expect(() => profile.createProfile("Cold", -1)).toThrow(
-      "0 und 30",
-    );
+    expect(() => profile.createProfile("Cold", -1)).toThrow("0 und 30");
   });
 
   it("deleteProfile gibt false fuer vordefinierte Profile", () => {

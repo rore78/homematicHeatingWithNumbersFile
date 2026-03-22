@@ -150,9 +150,9 @@ describe("ExcelParser", () => {
     });
 
     it("wirft Fehler bei ungueltigem Format", () => {
-      expect(() => parser.parseDateTime("nicht-ein-datum", "Startdatum")).toThrow(
-        "Startdatum",
-      );
+      expect(() =>
+        parser.parseDateTime("nicht-ein-datum", "Startdatum"),
+      ).toThrow("Startdatum");
     });
 
     it("wirft Fehler bei leerem Wert", () => {
@@ -185,7 +185,9 @@ describe("ExcelParser", () => {
     });
 
     it("wirft Fehler bei nicht-numerischem Wert", () => {
-      expect(() => parser.parseTemperature("abc")).toThrow("Ungültige Temperatur");
+      expect(() => parser.parseTemperature("abc")).toThrow(
+        "Ungültige Temperatur",
+      );
     });
 
     it("wirft Fehler bei null/leer", () => {
