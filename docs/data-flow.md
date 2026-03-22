@@ -43,14 +43,14 @@ sequenceDiagram
 
 The parser performs case-insensitive matching against the column headers in the first row of the spreadsheet. At minimum, **Bereich**, **Startdatum**, and **Enddatum** must be found.
 
-| Internal Field | Accepted Column Names |
-|---------------|----------------------|
-| `area` | bereich, area, zone, raum |
+| Internal Field  | Accepted Column Names                                                 |
+| --------------- | --------------------------------------------------------------------- |
+| `area`          | bereich, area, zone, raum                                             |
 | `startDateTime` | startdatum, start datetime, startzeit, start time, start, von, beginn |
-| `endDateTime` | enddatum, end datetime, endzeit, end time, end, bis, ende |
-| `temperature` | temperatur, temperature, temp, C, celsius |
-| `profile` | heizprofil, profil, profile, heating profile |
-| `notes` | zusatzinfo, notes, notiz, bemerkung, info, information |
+| `endDateTime`   | enddatum, end datetime, endzeit, end time, end, bis, ende             |
+| `temperature`   | temperatur, temperature, temp, C, celsius                             |
+| `profile`       | heizprofil, profil, profile, heating profile                          |
+| `notes`         | zusatzinfo, notes, notiz, bemerkung, info, information                |
 
 ### Date Parsing Logic
 
@@ -190,6 +190,7 @@ flowchart TD
 ```
 
 Key behaviors:
+
 - **Interval:** 60 seconds (`setInterval`)
 - **Immediate check:** Runs once on activation (`activateSchedule()` calls `checkAndExecute()`)
 - **Error handling:** Individual device errors are logged but do not stop execution of other devices
@@ -212,12 +213,12 @@ Input: "Wohnzimmer"
 
 ## 5. Predefined Heating Profiles
 
-| Profile | Temperature | Description |
-|---------|------------|-------------|
-| Komfort | 21.0 C | Komfortable Raumtemperatur |
-| Nacht | 17.0 C | Nachtabsenkung |
-| Abwesenheit | 16.0 C | Temperatur bei Abwesenheit |
-| Reduziert | 19.0 C | Reduzierte Temperatur |
+| Profile     | Temperature | Description                |
+| ----------- | ----------- | -------------------------- |
+| Komfort     | 21.0 C      | Komfortable Raumtemperatur |
+| Nacht       | 17.0 C      | Nachtabsenkung             |
+| Abwesenheit | 16.0 C      | Temperatur bei Abwesenheit |
+| Reduziert   | 19.0 C      | Reduzierte Temperatur      |
 
 Custom profiles can be created via `HeatingProfile.createProfile()` (temperature range: 0-30 C). Predefined profiles cannot be deleted.
 

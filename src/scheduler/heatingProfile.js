@@ -5,26 +5,26 @@
 export class HeatingProfile {
   constructor() {
     this.profiles = {
-      'Komfort': {
-        name: 'Komfort',
+      Komfort: {
+        name: "Komfort",
         temperature: 21.0,
-        description: 'Komfortable Raumtemperatur'
+        description: "Komfortable Raumtemperatur",
       },
-      'Nacht': {
-        name: 'Nacht',
+      Nacht: {
+        name: "Nacht",
         temperature: 17.0,
-        description: 'Nachtabsenkung'
+        description: "Nachtabsenkung",
       },
-      'Abwesenheit': {
-        name: 'Abwesenheit',
+      Abwesenheit: {
+        name: "Abwesenheit",
         temperature: 16.0,
-        description: 'Temperatur bei Abwesenheit'
+        description: "Temperatur bei Abwesenheit",
       },
-      'Reduziert': {
-        name: 'Reduziert',
+      Reduziert: {
+        name: "Reduziert",
         temperature: 19.0,
-        description: 'Reduzierte Temperatur'
-      }
+        description: "Reduzierte Temperatur",
+      },
     };
   }
 
@@ -52,16 +52,20 @@ export class HeatingProfile {
    * @param {string} description - Beschreibung (optional)
    * @returns {object} - Erstelltes/aktualisiertes Profil
    */
-  createProfile(name, temperature, description = '') {
-    if (typeof temperature !== 'number' || temperature < 0 || temperature > 30) {
-      throw new Error('Temperatur muss eine Zahl zwischen 0 und 30 sein');
+  createProfile(name, temperature, description = "") {
+    if (
+      typeof temperature !== "number" ||
+      temperature < 0 ||
+      temperature > 30
+    ) {
+      throw new Error("Temperatur muss eine Zahl zwischen 0 und 30 sein");
     }
 
     this.profiles[name] = {
       name,
       temperature,
       description,
-      custom: true
+      custom: true,
     };
 
     return this.profiles[name];
@@ -113,4 +117,3 @@ export class HeatingProfile {
 }
 
 export default HeatingProfile;
-

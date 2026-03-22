@@ -1,11 +1,11 @@
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const AREAS_FILE = path.join(process.cwd(), 'areas.json');
+const AREAS_FILE = path.join(process.cwd(), "areas.json");
 
 /**
  * Bereichs-Manager
@@ -23,7 +23,7 @@ export class AreaManager {
   loadAreas() {
     try {
       if (fs.existsSync(AREAS_FILE)) {
-        const data = fs.readFileSync(AREAS_FILE, 'utf8');
+        const data = fs.readFileSync(AREAS_FILE, "utf8");
         return JSON.parse(data);
       }
     } catch (error) {
@@ -37,7 +37,7 @@ export class AreaManager {
    */
   saveAreas() {
     try {
-      fs.writeFileSync(AREAS_FILE, JSON.stringify(this.areas, null, 2), 'utf8');
+      fs.writeFileSync(AREAS_FILE, JSON.stringify(this.areas, null, 2), "utf8");
     } catch (error) {
       throw new Error(`Fehler beim Speichern der Bereiche: ${error.message}`);
     }
@@ -50,18 +50,18 @@ export class AreaManager {
    * @returns {object} - Erstellter/aktualisierter Bereich
    */
   createArea(name, deviceIds) {
-    if (!name || typeof name !== 'string') {
-      throw new Error('Bereichsname muss ein String sein');
+    if (!name || typeof name !== "string") {
+      throw new Error("Bereichsname muss ein String sein");
     }
     if (!Array.isArray(deviceIds)) {
-      throw new Error('deviceIds muss ein Array sein');
+      throw new Error("deviceIds muss ein Array sein");
     }
 
     this.areas[name] = {
       name,
       deviceIds: [...deviceIds],
       createdAt: this.areas[name]?.createdAt || new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
     };
 
     this.saveAreas();
@@ -133,8 +133,11 @@ export class AreaManager {
     }
 
     // Wenn es kommagetrennte Geräte-IDs sind, parse sie
-    if (areaOrDevices.includes(',')) {
-      return areaOrDevices.split(',').map(id => id.trim()).filter(id => id);
+    if (areaOrDevices.includes(",")) {
+      return areaOrDevices
+        .split(",")
+        .map((id) => id.trim())
+        .filter((id) => id);
     }
 
     // Sonst ist es eine einzelne Geräte-ID
@@ -143,4 +146,3 @@ export class AreaManager {
 }
 
 export default AreaManager;
-

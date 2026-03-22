@@ -175,24 +175,24 @@ classDiagram
 
 **Normalization mapping:**
 
-| Normalized Field | Cloud Source | Local (CCU) Source |
-|-----------------|-------------|-------------------|
-| `id` | `device.id` | `device.ADDRESS` or `device.ID` |
-| `name` | `device.label` or `device.name` | `device.NAME` |
-| `type` | `device.type` | `device.TYPE` |
-| `model` | `device.modelType` | `device.TYPE` |
-| `firmware` | `device.firmwareVersion` | `device.FIRMWARE` |
-| `channels` | `device.functionalChannels` | `[]` (not available) |
+| Normalized Field | Cloud Source                    | Local (CCU) Source              |
+| ---------------- | ------------------------------- | ------------------------------- |
+| `id`             | `device.id`                     | `device.ADDRESS` or `device.ID` |
+| `name`           | `device.label` or `device.name` | `device.NAME`                   |
+| `type`           | `device.type`                   | `device.TYPE`                   |
+| `model`          | `device.modelType`              | `device.TYPE`                   |
+| `firmware`       | `device.firmwareVersion`        | `device.FIRMWARE`               |
+| `channels`       | `device.functionalChannels`     | `[]` (not available)            |
 
 ## Data Persistence
 
 The addon uses a file-based persistence model with no database:
 
-| Data | Storage | Format |
-|------|---------|--------|
-| Heating schedules | `schedules/{uuid}.json` | One JSON file per schedule |
-| Area definitions | `areas.json` | Single JSON file, keyed by area name |
-| Uploaded files | `uploads/` | Temporary -- deleted after parsing |
+| Data              | Storage                 | Format                               |
+| ----------------- | ----------------------- | ------------------------------------ |
+| Heating schedules | `schedules/{uuid}.json` | One JSON file per schedule           |
+| Area definitions  | `areas.json`            | Single JSON file, keyed by area name |
+| Uploaded files    | `uploads/`              | Temporary -- deleted after parsing   |
 
 ## Directory Structure
 

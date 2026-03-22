@@ -125,12 +125,12 @@ graph TD
     end
 ```
 
-| Path | Description |
-|------|-------------|
-| `/usr/local/addons/my-homematic-addon/` | Addon installation directory |
-| `/etc/init.d/my-homematic-addon` | Service init script |
-| `/var/log/my-homematic-addon.log` | Application log (stdout + stderr) |
-| `/var/run/my-homematic-addon.pid` | PID file for process management |
+| Path                                    | Description                       |
+| --------------------------------------- | --------------------------------- |
+| `/usr/local/addons/my-homematic-addon/` | Addon installation directory      |
+| `/etc/init.d/my-homematic-addon`        | Service init script               |
+| `/var/log/my-homematic-addon.log`       | Application log (stdout + stderr) |
+| `/var/run/my-homematic-addon.pid`       | PID file for process management   |
 
 ## Service Management
 
@@ -149,6 +149,7 @@ graph TD
 ```
 
 The init script handles:
+
 - PID file management
 - Graceful shutdown (SIGTERM, then SIGKILL after 5s)
 - Automatic restart on boot (registered via `update-rc.d` or `systemctl`)
@@ -161,6 +162,7 @@ The init script handles:
 Create a `.env` file in the addon directory to configure the connection:
 
 **Cloud Mode:**
+
 ```env
 HOMEMATIC_MODE=cloud
 HOMEMATIC_IP_ACCESS_POINT_SGTIN=your-sgtin
@@ -172,6 +174,7 @@ HOMEMATIC_IP_AUTH_TOKEN=your-token
 ```
 
 **Local Mode:**
+
 ```env
 HOMEMATIC_MODE=local
 HOMEMATIC_CCU_HOST=192.168.1.100
@@ -183,6 +186,7 @@ HOMEMATIC_CCU_PORT=2001
 ```
 
 **Auto Mode (default):**
+
 ```env
 HOMEMATIC_MODE=auto
 # Provide both cloud and/or local config
@@ -190,6 +194,7 @@ HOMEMATIC_MODE=auto
 ```
 
 **Server:**
+
 ```env
 PORT=3000
 ```
@@ -225,12 +230,12 @@ Run `uninstall.sh` or remove the addon via CCU Web UI. The script:
 
 ## Troubleshooting
 
-| Problem | Solution |
-|---------|----------|
-| "Node.js ist nicht installiert!" | Install the "Node.js for CCU" addon first |
-| npm install fails | Check internet connectivity on CCU; try `npm install --production` manually |
-| Port 3000 already in use | Set `PORT=3001` in `.env` |
-| Addon not starting after reboot | Verify init script: `ls -la /etc/init.d/my-homematic-addon` |
-| No devices found | Check `HOMEMATIC_MODE` and corresponding credentials in `.env` |
-| Connection refused (local mode) | Verify CCU IP and that XML-RPC is enabled on port 2001 |
-| Logs | Check `/var/log/my-homematic-addon.log` |
+| Problem                          | Solution                                                                    |
+| -------------------------------- | --------------------------------------------------------------------------- |
+| "Node.js ist nicht installiert!" | Install the "Node.js for CCU" addon first                                   |
+| npm install fails                | Check internet connectivity on CCU; try `npm install --production` manually |
+| Port 3000 already in use         | Set `PORT=3001` in `.env`                                                   |
+| Addon not starting after reboot  | Verify init script: `ls -la /etc/init.d/my-homematic-addon`                 |
+| No devices found                 | Check `HOMEMATIC_MODE` and corresponding credentials in `.env`              |
+| Connection refused (local mode)  | Verify CCU IP and that XML-RPC is enabled on port 2001                      |
+| Logs                             | Check `/var/log/my-homematic-addon.log`                                     |

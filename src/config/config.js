@@ -1,6 +1,6 @@
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -13,24 +13,43 @@ export class Config {
   constructor(config = {}) {
     // Cloud-Konfiguration
     this.cloud = {
-      accessPointSGTIN: config.cloud?.accessPointSGTIN || process.env.HOMEMATIC_IP_ACCESS_POINT_SGTIN || null,
-      authToken: config.cloud?.authToken || process.env.HOMEMATIC_IP_AUTH_TOKEN || null,
-      clientId: config.cloud?.clientId || process.env.HOMEMATIC_IP_CLIENT_ID || null,
-      clientSecret: config.cloud?.clientSecret || process.env.HOMEMATIC_IP_CLIENT_SECRET || null,
-      apiUrl: config.cloud?.apiUrl || process.env.HOMEMATIC_IP_API_URL || 'https://ps1.homematic.com:6969'
+      accessPointSGTIN:
+        config.cloud?.accessPointSGTIN ||
+        process.env.HOMEMATIC_IP_ACCESS_POINT_SGTIN ||
+        null,
+      authToken:
+        config.cloud?.authToken || process.env.HOMEMATIC_IP_AUTH_TOKEN || null,
+      clientId:
+        config.cloud?.clientId || process.env.HOMEMATIC_IP_CLIENT_ID || null,
+      clientSecret:
+        config.cloud?.clientSecret ||
+        process.env.HOMEMATIC_IP_CLIENT_SECRET ||
+        null,
+      apiUrl:
+        config.cloud?.apiUrl ||
+        process.env.HOMEMATIC_IP_API_URL ||
+        "https://ps1.homematic.com:6969",
     };
 
     // Lokale CCU-Konfiguration
     this.local = {
-      host: config.local?.host || process.env.HOMEMATIC_CCU_HOST || '192.168.1.100',
-      port: config.local?.port || parseInt(process.env.HOMEMATIC_CCU_PORT || '2001'),
-      username: config.local?.username || process.env.HOMEMATIC_CCU_USERNAME || '',
-      password: config.local?.password || process.env.HOMEMATIC_CCU_PASSWORD || '',
-      useTLS: config.local?.useTLS || process.env.HOMEMATIC_CCU_USE_TLS === 'true' || false
+      host:
+        config.local?.host || process.env.HOMEMATIC_CCU_HOST || "192.168.1.100",
+      port:
+        config.local?.port ||
+        parseInt(process.env.HOMEMATIC_CCU_PORT || "2001"),
+      username:
+        config.local?.username || process.env.HOMEMATIC_CCU_USERNAME || "",
+      password:
+        config.local?.password || process.env.HOMEMATIC_CCU_PASSWORD || "",
+      useTLS:
+        config.local?.useTLS ||
+        process.env.HOMEMATIC_CCU_USE_TLS === "true" ||
+        false,
     };
 
     // Verbindungsmodus
-    this.mode = config.mode || process.env.HOMEMATIC_MODE || 'auto'; // 'cloud', 'local', 'auto'
+    this.mode = config.mode || process.env.HOMEMATIC_MODE || "auto"; // 'cloud', 'local', 'auto'
   }
 
   /**
@@ -42,11 +61,13 @@ export class Config {
     try {
       const fullPath = path.resolve(configPath);
       if (fs.existsSync(fullPath)) {
-        const configData = JSON.parse(fs.readFileSync(fullPath, 'utf8'));
+        const configData = JSON.parse(fs.readFileSync(fullPath, "utf8"));
         return new Config(configData);
       }
     } catch (error) {
-      console.warn(`Konfigurationsdatei konnte nicht geladen werden: ${error.message}`);
+      console.warn(
+        `Konfigurationsdatei konnte nicht geladen werden: ${error.message}`,
+      );
     }
     return new Config();
   }
@@ -72,15 +93,15 @@ export class Config {
    * @returns {string} - 'cloud', 'local' oder null wenn keine Konfiguration vorhanden
    */
   getMode() {
-    if (this.mode === 'cloud' && this.hasCloudConfig()) {
-      return 'cloud';
+    if (this.mode === "cloud" && this.hasCloudConfig()) {
+      return "cloud";
     }
-    if (this.mode === 'local' && this.hasLocalConfig()) {
-      return 'local';
+    if (this.mode === "local" && this.hasLocalConfig()) {
+      return "local";
     }
-    if (this.mode === 'auto') {
-      if (this.hasCloudConfig()) return 'cloud';
-      if (this.hasLocalConfig()) return 'local';
+    if (this.mode === "auto") {
+      if (this.hasCloudConfig()) return "cloud";
+      if (this.hasLocalConfig()) return "local";
     }
     return null;
   }
@@ -94,27 +115,30 @@ export class Config {
     const mode = this.getMode();
 
     if (!mode) {
-      errors.push('Keine gültige Konfiguration gefunden. Bitte Cloud- oder Local-Konfiguration angeben.');
+      errors.push(
+        "Keine gültige Konfiguration gefunden. Bitte Cloud- oder Local-Konfiguration angeben.",
+      );
     }
 
-    if (mode === 'cloud') {
+    if (mode === "cloud") {
       if (!this.cloud.accessPointSGTIN && !this.cloud.authToken) {
-        errors.push('Cloud-Konfiguration: accessPointSGTIN oder authToken erforderlich');
+        errors.push(
+          "Cloud-Konfiguration: accessPointSGTIN oder authToken erforderlich",
+        );
       }
     }
 
-    if (mode === 'local') {
+    if (mode === "local") {
       if (!this.local.host) {
-        errors.push('Local-Konfiguration: host erforderlich');
+        errors.push("Local-Konfiguration: host erforderlich");
       }
     }
 
     return {
       valid: errors.length === 0,
-      errors
+      errors,
     };
   }
 }
 
 export default Config;
-

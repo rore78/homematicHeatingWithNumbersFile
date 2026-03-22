@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios from "axios";
 
 /**
  * Homematic IP Cloud Client
@@ -11,7 +11,7 @@ export class CloudClient {
     this.accessPointSGTIN = config.accessPointSGTIN;
     this.clientId = config.clientId;
     this.clientSecret = config.clientSecret;
-    this.apiUrl = config.apiUrl || 'https://ps1.homematic.com:6969';
+    this.apiUrl = config.apiUrl || "https://ps1.homematic.com:6969";
     this.clientAuthToken = null;
     this.clientCharacteristics = null;
   }
@@ -33,13 +33,13 @@ export class CloudClient {
         const response = await axios.post(
           `${this.apiUrl}/hmip/home/accessPoint/requestClientAuthToken`,
           {
-            accessPointId: this.accessPointSGTIN
+            accessPointId: this.accessPointSGTIN,
           },
           {
             headers: {
-              'Content-Type': 'application/json'
-            }
-          }
+              "Content-Type": "application/json",
+            },
+          },
         );
 
         if (response.data && response.data.clientAuthToken) {
@@ -48,10 +48,14 @@ export class CloudClient {
         }
       }
 
-      throw new Error('Authentifizierung fehlgeschlagen: Keine gültigen Credentials');
+      throw new Error(
+        "Authentifizierung fehlgeschlagen: Keine gültigen Credentials",
+      );
     } catch (error) {
       if (error.response) {
-        throw new Error(`Authentifizierungsfehler: ${error.response.status} - ${error.response.data?.message || error.message}`);
+        throw new Error(
+          `Authentifizierungsfehler: ${error.response.status} - ${error.response.data?.message || error.message}`,
+        );
       }
       throw new Error(`Authentifizierungsfehler: ${error.message}`);
     }
@@ -71,22 +75,26 @@ export class CloudClient {
         `${this.apiUrl}/hmip/home/accessPoint/getClientCharacteristics`,
         {
           headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${this.clientAuthToken}`
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${this.clientAuthToken}`,
           },
           params: {
-            accessPointId: this.accessPointSGTIN
-          }
-        }
+            accessPointId: this.accessPointSGTIN,
+          },
+        },
       );
 
       this.clientCharacteristics = response.data;
       return this.clientCharacteristics;
     } catch (error) {
       if (error.response) {
-        throw new Error(`Fehler beim Abrufen der Client-Charakteristika: ${error.response.status} - ${error.response.data?.message || error.message}`);
+        throw new Error(
+          `Fehler beim Abrufen der Client-Charakteristika: ${error.response.status} - ${error.response.data?.message || error.message}`,
+        );
       }
-      throw new Error(`Fehler beim Abrufen der Client-Charakteristika: ${error.message}`);
+      throw new Error(
+        `Fehler beim Abrufen der Client-Charakteristika: ${error.message}`,
+      );
     }
   }
 
@@ -104,16 +112,18 @@ export class CloudClient {
         `${this.apiUrl}/hmip/home/getCurrentState`,
         {
           headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${this.clientAuthToken}`
-          }
-        }
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${this.clientAuthToken}`,
+          },
+        },
       );
 
       return response.data?.devices || [];
     } catch (error) {
       if (error.response) {
-        throw new Error(`Fehler beim Abrufen der Geräte: ${error.response.status} - ${error.response.data?.message || error.message}`);
+        throw new Error(
+          `Fehler beim Abrufen der Geräte: ${error.response.status} - ${error.response.data?.message || error.message}`,
+        );
       }
       throw new Error(`Fehler beim Abrufen der Geräte: ${error.message}`);
     }
@@ -127,8 +137,8 @@ export class CloudClient {
   async getDevice(deviceId) {
     try {
       const devices = await this.getDevices();
-      const device = devices.find(d => d.id === deviceId);
-      
+      const device = devices.find((d) => d.id === deviceId);
+
       if (!device) {
         throw new Error(`Gerät mit ID ${deviceId} nicht gefunden`);
       }
@@ -159,22 +169,26 @@ export class CloudClient {
           deviceId,
           channelId,
           parameter,
-          value
+          value,
         },
         {
           headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${this.clientAuthToken}`
-          }
-        }
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${this.clientAuthToken}`,
+          },
+        },
       );
 
       return response.data;
     } catch (error) {
       if (error.response) {
-        throw new Error(`Fehler beim Setzen des Geräteparameters: ${error.response.status} - ${error.response.data?.message || error.message}`);
+        throw new Error(
+          `Fehler beim Setzen des Geräteparameters: ${error.response.status} - ${error.response.data?.message || error.message}`,
+        );
       }
-      throw new Error(`Fehler beim Setzen des Geräteparameters: ${error.message}`);
+      throw new Error(
+        `Fehler beim Setzen des Geräteparameters: ${error.message}`,
+      );
     }
   }
 
@@ -185,7 +199,7 @@ export class CloudClient {
    * @returns {Promise<object>}
    */
   async setSwitchState(deviceId, on) {
-    return this.setDeviceData(deviceId, 1, 'ON', on);
+    return this.setDeviceData(deviceId, 1, "ON", on);
   }
 
   /**
@@ -195,7 +209,12 @@ export class CloudClient {
    * @returns {Promise<object>}
    */
   async setDimLevel(deviceId, level) {
-    return this.setDeviceData(deviceId, 1, 'LEVEL', Math.max(0, Math.min(1.0, level)));
+    return this.setDeviceData(
+      deviceId,
+      1,
+      "LEVEL",
+      Math.max(0, Math.min(1.0, level)),
+    );
   }
 
   /**
@@ -205,9 +224,13 @@ export class CloudClient {
    * @returns {Promise<object>}
    */
   async setTemperature(deviceId, temperature) {
-    return this.setDeviceData(deviceId, 0, 'SET_POINT_TEMPERATURE', temperature);
+    return this.setDeviceData(
+      deviceId,
+      0,
+      "SET_POINT_TEMPERATURE",
+      temperature,
+    );
   }
 }
 
 export default CloudClient;
-

@@ -1,5 +1,5 @@
-import CloudClient from '../cloud/cloudClient.js';
-import LocalClient from '../local/localClient.js';
+import CloudClient from "../cloud/cloudClient.js";
+import LocalClient from "../local/localClient.js";
 
 /**
  * Device Controller
@@ -52,9 +52,9 @@ export class DeviceController {
         const device = await this.client.getDevice(deviceId);
         return {
           id: device.id,
-          name: device.label || device.name || '',
-          type: device.type || '',
-          state: device.functionalChannels || {}
+          name: device.label || device.name || "",
+          type: device.type || "",
+          state: device.functionalChannels || {},
         };
       }
     } catch (error) {
@@ -91,7 +91,7 @@ export class DeviceController {
     try {
       // Normalisiere Level auf 0-1.0 Bereich
       const normalizedLevel = level > 1.0 ? level / 100 : level;
-      
+
       if (this.isCloud) {
         await this.client.setDimLevel(deviceId, normalizedLevel);
         return true;
@@ -180,7 +180,7 @@ export class DeviceController {
     if (!Array.isArray(devices)) {
       return [];
     }
-    return devices.map(device => this._normalizeDevice(device));
+    return devices.map((device) => this._normalizeDevice(device));
   }
 
   /**
@@ -193,31 +193,30 @@ export class DeviceController {
     if (this.isCloud) {
       return {
         id: device.id,
-        name: device.label || device.name || '',
-        type: device.type || '',
-        model: device.modelType || '',
-        manufacturer: device.manufacturer || 'eQ-3',
-        firmware: device.firmwareVersion || '',
+        name: device.label || device.name || "",
+        type: device.type || "",
+        model: device.modelType || "",
+        manufacturer: device.manufacturer || "eQ-3",
+        firmware: device.firmwareVersion || "",
         lowBat: device.lowBat || false,
         unreach: device.unreach || false,
-        channels: device.functionalChannels || []
+        channels: device.functionalChannels || [],
       };
     } else {
       // Local CCU Format
       return {
         id: device.ADDRESS || device.ID,
-        name: device.NAME || '',
-        type: device.TYPE || '',
-        model: device.TYPE || '',
-        manufacturer: 'eQ-3',
-        firmware: device.FIRMWARE || '',
+        name: device.NAME || "",
+        type: device.TYPE || "",
+        model: device.TYPE || "",
+        manufacturer: "eQ-3",
+        firmware: device.FIRMWARE || "",
         lowBat: device.LOWBAT || false,
         unreach: device.UNREACH || false,
-        channels: []
+        channels: [],
       };
     }
   }
 }
 
 export default DeviceController;
-

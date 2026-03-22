@@ -1,15 +1,15 @@
-import express from 'express';
-import multer from 'multer';
-import cors from 'cors';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import fs from 'fs';
-import ExcelParser from './src/parser/excelParser.js';
-import NumbersParser from './src/parser/numbersParser.js';
-import ScheduleManager from './src/scheduler/scheduleManager.js';
-import AreaManager from './src/areas/areaManager.js';
-import HeatingProfile from './src/scheduler/heatingProfile.js';
-import HomematicIPAddon, { Config } from './src/index.js';
+import express from "express";
+import multer from "multer";
+import cors from "cors";
+import path from "path";
+import { fileURLToPath } from "url";
+import fs from "fs";
+import ExcelParser from "./src/parser/excelParser.js";
+import NumbersParser from "./src/parser/numbersParser.js";
+import ScheduleManager from "./src/scheduler/scheduleManager.js";
+import AreaManager from "./src/areas/areaManager.js";
+import HeatingProfile from "./src/scheduler/heatingProfile.js";
+import HomematicIPAddon, { Config } from "./src/index.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -20,10 +20,10 @@ const PORT = process.env.PORT || 3000;
 // Middleware
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, "public")));
 
 // Upload-Konfiguration
-const uploadsDir = path.join(__dirname, 'uploads');
+const uploadsDir = path.join(__dirname, "uploads");
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
@@ -33,24 +33,28 @@ const storage = multer.diskStorage({
     cb(null, uploadsDir);
   },
   filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, uniqueSuffix + '-' + file.originalname);
-  }
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    cb(null, uniqueSuffix + "-" + file.originalname);
+  },
 });
 
 const upload = multer({
   storage,
   fileFilter: (req, file, cb) => {
     const ext = path.extname(file.originalname).toLowerCase();
-    if (['.xlsx', '.xls', '.numbers'].includes(ext)) {
+    if ([".xlsx", ".xls", ".numbers"].includes(ext)) {
       cb(null, true);
     } else {
-      cb(new Error('Nur Excel (.xlsx, .xls) und Numbers (.numbers) Dateien sind erlaubt'));
+      cb(
+        new Error(
+          "Nur Excel (.xlsx, .xls) und Numbers (.numbers) Dateien sind erlaubt",
+        ),
+      );
     }
   },
   limits: {
-    fileSize: 10 * 1024 * 1024 // 10MB
-  }
+    fileSize: 10 * 1024 * 1024, // 10MB
+  },
 });
 
 // Globale Instanzen
@@ -65,16 +69,16 @@ async function initializeAddon() {
     const config = new Config();
     addon = new HomematicIPAddon(config);
     await addon.initialize();
-    
+
     scheduleManager = new ScheduleManager(addon.controller);
     scheduleManager.setDeviceController(addon.controller);
     areaManager = new AreaManager();
     heatingProfile = new HeatingProfile();
-    
-    console.log('Homematic IP Addon initialisiert');
+
+    console.log("Homematic IP Addon initialisiert");
     return true;
   } catch (error) {
-    console.error('Fehler bei der Initialisierung:', error.message);
+    console.error("Fehler bei der Initialisierung:", error.message);
     return false;
   }
 }
@@ -82,31 +86,31 @@ async function initializeAddon() {
 // API Routes
 
 // Upload und Parse
-app.post('/api/upload', upload.single('file'), async (req, res) => {
+app.post("/api/upload", upload.single("file"), async (req, res) => {
   try {
     if (!req.file) {
-      return res.status(400).json({ error: 'Keine Datei hochgeladen' });
+      return res.status(400).json({ error: "Keine Datei hochgeladen" });
     }
 
     const filePath = req.file.path;
     const ext = path.extname(req.file.originalname).toLowerCase();
 
     let parser;
-    if (ext === '.numbers') {
+    if (ext === ".numbers") {
       parser = new NumbersParser();
     } else {
       parser = new ExcelParser();
     }
 
     const data = parser.parse(filePath);
-    
+
     // Lösche temporäre Datei
     fs.unlinkSync(filePath);
 
     res.json({
       success: true,
       data,
-      count: data.length
+      count: data.length,
     });
   } catch (error) {
     // Lösche temporäre Datei bei Fehler
@@ -118,16 +122,20 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
 });
 
 // Zeitplan erstellen
-app.post('/api/schedule', async (req, res) => {
+app.post("/api/schedule", async (req, res) => {
   try {
     const { name, data } = req.body;
 
     if (!name || !data || !Array.isArray(data)) {
-      return res.status(400).json({ error: 'Name und Daten (Array) erforderlich' });
+      return res
+        .status(400)
+        .json({ error: "Name und Daten (Array) erforderlich" });
     }
 
     if (!scheduleManager) {
-      return res.status(503).json({ error: 'Schedule Manager nicht initialisiert' });
+      return res
+        .status(503)
+        .json({ error: "Schedule Manager nicht initialisiert" });
     }
 
     const schedule = scheduleManager.createSchedule(name, data);
@@ -138,10 +146,12 @@ app.post('/api/schedule', async (req, res) => {
 });
 
 // Alle Zeitpläne abrufen
-app.get('/api/schedules', (req, res) => {
+app.get("/api/schedules", (req, res) => {
   try {
     if (!scheduleManager) {
-      return res.status(503).json({ error: 'Schedule Manager nicht initialisiert' });
+      return res
+        .status(503)
+        .json({ error: "Schedule Manager nicht initialisiert" });
     }
 
     const schedules = scheduleManager.getAllSchedules();
@@ -152,15 +162,17 @@ app.get('/api/schedules', (req, res) => {
 });
 
 // Spezifischen Zeitplan abrufen
-app.get('/api/schedules/:id', (req, res) => {
+app.get("/api/schedules/:id", (req, res) => {
   try {
     if (!scheduleManager) {
-      return res.status(503).json({ error: 'Schedule Manager nicht initialisiert' });
+      return res
+        .status(503)
+        .json({ error: "Schedule Manager nicht initialisiert" });
     }
 
     const schedule = scheduleManager.getSchedule(req.params.id);
     if (!schedule) {
-      return res.status(404).json({ error: 'Zeitplan nicht gefunden' });
+      return res.status(404).json({ error: "Zeitplan nicht gefunden" });
     }
 
     res.json({ success: true, schedule });
@@ -170,15 +182,17 @@ app.get('/api/schedules/:id', (req, res) => {
 });
 
 // Zeitplan aktivieren
-app.post('/api/schedules/:id/activate', (req, res) => {
+app.post("/api/schedules/:id/activate", (req, res) => {
   try {
     if (!scheduleManager) {
-      return res.status(503).json({ error: 'Schedule Manager nicht initialisiert' });
+      return res
+        .status(503)
+        .json({ error: "Schedule Manager nicht initialisiert" });
     }
 
     const success = scheduleManager.activateSchedule(req.params.id);
     if (!success) {
-      return res.status(404).json({ error: 'Zeitplan nicht gefunden' });
+      return res.status(404).json({ error: "Zeitplan nicht gefunden" });
     }
 
     res.json({ success: true });
@@ -188,15 +202,17 @@ app.post('/api/schedules/:id/activate', (req, res) => {
 });
 
 // Zeitplan deaktivieren
-app.post('/api/schedules/:id/deactivate', (req, res) => {
+app.post("/api/schedules/:id/deactivate", (req, res) => {
   try {
     if (!scheduleManager) {
-      return res.status(503).json({ error: 'Schedule Manager nicht initialisiert' });
+      return res
+        .status(503)
+        .json({ error: "Schedule Manager nicht initialisiert" });
     }
 
     const success = scheduleManager.deactivateSchedule(req.params.id);
     if (!success) {
-      return res.status(404).json({ error: 'Zeitplan nicht gefunden' });
+      return res.status(404).json({ error: "Zeitplan nicht gefunden" });
     }
 
     res.json({ success: true });
@@ -206,15 +222,17 @@ app.post('/api/schedules/:id/deactivate', (req, res) => {
 });
 
 // Zeitplan löschen
-app.delete('/api/schedules/:id', (req, res) => {
+app.delete("/api/schedules/:id", (req, res) => {
   try {
     if (!scheduleManager) {
-      return res.status(503).json({ error: 'Schedule Manager nicht initialisiert' });
+      return res
+        .status(503)
+        .json({ error: "Schedule Manager nicht initialisiert" });
     }
 
     const success = scheduleManager.deleteSchedule(req.params.id);
     if (!success) {
-      return res.status(404).json({ error: 'Zeitplan nicht gefunden' });
+      return res.status(404).json({ error: "Zeitplan nicht gefunden" });
     }
 
     res.json({ success: true });
@@ -224,10 +242,12 @@ app.delete('/api/schedules/:id', (req, res) => {
 });
 
 // Bereiche abrufen
-app.get('/api/areas', (req, res) => {
+app.get("/api/areas", (req, res) => {
   try {
     if (!areaManager) {
-      return res.status(503).json({ error: 'Area Manager nicht initialisiert' });
+      return res
+        .status(503)
+        .json({ error: "Area Manager nicht initialisiert" });
     }
 
     const areas = areaManager.getAllAreas();
@@ -238,16 +258,20 @@ app.get('/api/areas', (req, res) => {
 });
 
 // Bereich erstellen/aktualisieren
-app.post('/api/areas', (req, res) => {
+app.post("/api/areas", (req, res) => {
   try {
     if (!areaManager) {
-      return res.status(503).json({ error: 'Area Manager nicht initialisiert' });
+      return res
+        .status(503)
+        .json({ error: "Area Manager nicht initialisiert" });
     }
 
     const { name, deviceIds } = req.body;
 
     if (!name || !Array.isArray(deviceIds)) {
-      return res.status(400).json({ error: 'Name und deviceIds (Array) erforderlich' });
+      return res
+        .status(400)
+        .json({ error: "Name und deviceIds (Array) erforderlich" });
     }
 
     const area = areaManager.createArea(name, deviceIds);
@@ -258,15 +282,17 @@ app.post('/api/areas', (req, res) => {
 });
 
 // Bereich löschen
-app.delete('/api/areas/:name', (req, res) => {
+app.delete("/api/areas/:name", (req, res) => {
   try {
     if (!areaManager) {
-      return res.status(503).json({ error: 'Area Manager nicht initialisiert' });
+      return res
+        .status(503)
+        .json({ error: "Area Manager nicht initialisiert" });
     }
 
     const success = areaManager.deleteArea(req.params.name);
     if (!success) {
-      return res.status(404).json({ error: 'Bereich nicht gefunden' });
+      return res.status(404).json({ error: "Bereich nicht gefunden" });
     }
 
     res.json({ success: true });
@@ -276,10 +302,12 @@ app.delete('/api/areas/:name', (req, res) => {
 });
 
 // Heizprofile abrufen
-app.get('/api/profiles', (req, res) => {
+app.get("/api/profiles", (req, res) => {
   try {
     if (!heatingProfile) {
-      return res.status(503).json({ error: 'Heating Profile nicht initialisiert' });
+      return res
+        .status(503)
+        .json({ error: "Heating Profile nicht initialisiert" });
     }
 
     const profiles = heatingProfile.getAllProfiles();
@@ -290,10 +318,10 @@ app.get('/api/profiles', (req, res) => {
 });
 
 // Geräte abrufen
-app.get('/api/devices', async (req, res) => {
+app.get("/api/devices", async (req, res) => {
   try {
     if (!addon) {
-      return res.status(503).json({ error: 'Addon nicht initialisiert' });
+      return res.status(503).json({ error: "Addon nicht initialisiert" });
     }
 
     const devices = await addon.getDevices();
@@ -304,24 +332,26 @@ app.get('/api/devices', async (req, res) => {
 });
 
 // Frontend
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
 // Error Handler
 app.use((error, req, res, next) => {
-  console.error('Server Error:', error);
+  console.error("Server Error:", error);
   res.status(error.status || 500).json({
-    error: error.message || 'Interner Serverfehler'
+    error: error.message || "Interner Serverfehler",
   });
 });
 
 // Server starten
 async function startServer() {
   const initialized = await initializeAddon();
-  
+
   if (!initialized) {
-    console.warn('Warnung: Addon konnte nicht initialisiert werden. Server startet trotzdem.');
+    console.warn(
+      "Warnung: Addon konnte nicht initialisiert werden. Server startet trotzdem.",
+    );
   }
 
   app.listen(PORT, () => {
@@ -333,16 +363,16 @@ async function startServer() {
 startServer().catch(console.error);
 
 // Graceful Shutdown
-process.on('SIGTERM', () => {
-  console.log('SIGTERM Signal empfangen. Server wird beendet...');
+process.on("SIGTERM", () => {
+  console.log("SIGTERM Signal empfangen. Server wird beendet...");
   if (scheduleManager) {
     scheduleManager.stopScheduler();
   }
   process.exit(0);
 });
 
-process.on('SIGINT', () => {
-  console.log('SIGINT Signal empfangen. Server wird beendet...');
+process.on("SIGINT", () => {
+  console.log("SIGINT Signal empfangen. Server wird beendet...");
   if (scheduleManager) {
     scheduleManager.stopScheduler();
   }
@@ -350,4 +380,3 @@ process.on('SIGINT', () => {
 });
 
 export default app;
-

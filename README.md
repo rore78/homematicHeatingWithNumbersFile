@@ -38,10 +38,12 @@ npm install
 ### Cloud-Verbindung
 
 Für die Cloud-Verbindung benötigst du:
+
 - Access Point SGTIN (Seriennummer deines Homematic IP Access Points)
 - Optional: Auth Token (wird automatisch generiert wenn SGTIN vorhanden)
 
 **Umgebungsvariablen:**
+
 ```bash
 export HOMEMATIC_MODE=cloud
 export HOMEMATIC_IP_ACCESS_POINT_SGTIN=YOUR_SGTIN
@@ -49,25 +51,28 @@ export HOMEMATIC_IP_AUTH_TOKEN=YOUR_TOKEN  # Optional
 ```
 
 **Code:**
+
 ```javascript
-import { Config } from './src/index.js';
+import { Config } from "./src/index.js";
 
 const config = new Config({
-  mode: 'cloud',
+  mode: "cloud",
   cloud: {
-    accessPointSGTIN: 'YOUR_ACCESS_POINT_SGTIN'
-  }
+    accessPointSGTIN: "YOUR_ACCESS_POINT_SGTIN",
+  },
 });
 ```
 
 ### Lokale CCU-Verbindung
 
 Für die lokale Verbindung benötigst du:
+
 - IP-Adresse deiner CCU
 - Port (Standard: 2001)
 - Optional: Benutzername und Passwort
 
 **Umgebungsvariablen:**
+
 ```bash
 export HOMEMATIC_MODE=local
 export HOMEMATIC_CCU_HOST=192.168.1.100
@@ -77,13 +82,14 @@ export HOMEMATIC_CCU_PASSWORD=secret  # Optional
 ```
 
 **Code:**
+
 ```javascript
 const config = new Config({
-  mode: 'local',
+  mode: "local",
   local: {
-    host: '192.168.1.100',
-    port: 2001
-  }
+    host: "192.168.1.100",
+    port: 2001,
+  },
 });
 ```
 
@@ -93,9 +99,9 @@ Das Addon kann automatisch den besten Verbindungsmodus wählen:
 
 ```javascript
 const config = new Config({
-  mode: 'auto',  // oder weglassen
-  cloud: { accessPointSGTIN: '...' },
-  local: { host: '192.168.1.100' }
+  mode: "auto", // oder weglassen
+  cloud: { accessPointSGTIN: "..." },
+  local: { host: "192.168.1.100" },
 });
 ```
 
@@ -104,14 +110,14 @@ const config = new Config({
 ### Grundlegende Verwendung
 
 ```javascript
-import HomematicIPAddon, { Config } from './src/index.js';
+import HomematicIPAddon, { Config } from "./src/index.js";
 
 // Konfiguration erstellen
 const config = new Config({
-  mode: 'cloud',
+  mode: "cloud",
   cloud: {
-    accessPointSGTIN: 'YOUR_SGTIN'
-  }
+    accessPointSGTIN: "YOUR_SGTIN",
+  },
 });
 
 // Addon initialisieren
@@ -123,26 +129,26 @@ const devices = await addon.getDevices();
 console.log(`Gefundene Geräte: ${devices.length}`);
 
 // Gerät einschalten
-await addon.setSwitchState('DEVICE_ID', true);
+await addon.setSwitchState("DEVICE_ID", true);
 
 // Dimmer auf 50% setzen
-await addon.setDimLevel('DEVICE_ID', 0.5);
+await addon.setDimLevel("DEVICE_ID", 0.5);
 
 // Thermostat-Temperatur setzen
-await addon.setTemperature('DEVICE_ID', 21.5);
+await addon.setTemperature("DEVICE_ID", 21.5);
 ```
 
 ### Erweiterte Verwendung
 
 ```javascript
 // Gerätestatus abrufen
-const state = await addon.getDeviceState('DEVICE_ID');
+const state = await addon.getDeviceState("DEVICE_ID");
 
 // Benutzerdefinierten Parameter setzen
-await addon.setParameter('DEVICE_ID', 'PARAMETER_NAME', value);
+await addon.setParameter("DEVICE_ID", "PARAMETER_NAME", value);
 
 // Parameter abrufen
-const value = await addon.getParameter('DEVICE_ID', 'PARAMETER_NAME');
+const value = await addon.getParameter("DEVICE_ID", "PARAMETER_NAME");
 
 // Direkten Zugriff auf Client (für erweiterte Funktionen)
 const client = addon.getClient();
@@ -175,10 +181,11 @@ Konfigurationsklasse für Cloud- und Local-Einstellungen.
 #### Konstruktor
 
 ```javascript
-new Config(config)
+new Config(config);
 ```
 
 **Parameter:**
+
 - `config.mode` - 'cloud', 'local' oder 'auto'
 - `config.cloud` - Cloud-Konfiguration
 - `config.local` - Lokale CCU-Konfiguration
@@ -225,14 +232,14 @@ Das Web-Interface ist dann unter `http://localhost:3000` verfügbar.
 
 Die hochgeladene Datei sollte folgende Spalten enthalten:
 
-| Spalte | Beschreibung | Beispiel |
-|--------|--------------|----------|
-| **Bereich** (oder Area) | Bereichsname oder Geräte-IDs (kommagetrennt) | "Wohnzimmer" oder "DEVICE_1,DEVICE_2" |
-| **Startdatum** (oder Start DateTime) | Format: YYYY-MM-DD HH:MM oder DD.MM.YYYY HH:MM | "2024-01-15 08:00" |
-| **Enddatum** (oder End DateTime) | Format: YYYY-MM-DD HH:MM oder DD.MM.YYYY HH:MM | "2024-01-20 22:00" |
-| **Temperatur** (oder Temp) | Temperatur in °C | 21.0 |
-| **Heizprofil** (optional) | Vordefiniertes Profil | "Komfort", "Nacht", "Abwesenheit", "Reduziert" |
-| **Zusatzinfo** (optional) | Text-Informationen | "Hauptwohnbereich" |
+| Spalte                               | Beschreibung                                   | Beispiel                                       |
+| ------------------------------------ | ---------------------------------------------- | ---------------------------------------------- |
+| **Bereich** (oder Area)              | Bereichsname oder Geräte-IDs (kommagetrennt)   | "Wohnzimmer" oder "DEVICE_1,DEVICE_2"          |
+| **Startdatum** (oder Start DateTime) | Format: YYYY-MM-DD HH:MM oder DD.MM.YYYY HH:MM | "2024-01-15 08:00"                             |
+| **Enddatum** (oder End DateTime)     | Format: YYYY-MM-DD HH:MM oder DD.MM.YYYY HH:MM | "2024-01-20 22:00"                             |
+| **Temperatur** (oder Temp)           | Temperatur in °C                               | 21.0                                           |
+| **Heizprofil** (optional)            | Vordefiniertes Profil                          | "Komfort", "Nacht", "Abwesenheit", "Reduziert" |
+| **Zusatzinfo** (optional)            | Text-Informationen                             | "Hauptwohnbereich"                             |
 
 ### API-Endpoints
 
@@ -255,9 +262,9 @@ Alle Methoden werfen Fehler bei Problemen. Verwende try-catch für Fehlerbehandl
 
 ```javascript
 try {
-  await addon.setSwitchState('DEVICE_ID', true);
+  await addon.setSwitchState("DEVICE_ID", true);
 } catch (error) {
-  console.error('Fehler:', error.message);
+  console.error("Fehler:", error.message);
 }
 ```
 
@@ -298,6 +305,7 @@ MIT
 ## Unterstützung
 
 Bei Problemen oder Fragen:
+
 1. Prüfe die Konfiguration
 2. Stelle sicher, dass deine CCU/Cloud erreichbar ist
 3. Prüfe die Fehlermeldungen für detaillierte Informationen
@@ -311,6 +319,7 @@ Bei Problemen oder Fragen:
 ## Changelog
 
 ### Version 1.1.0
+
 - Web-Interface für Heizungssteuerung
 - Excel/Numbers Datei-Upload
 - Zeitplan-Verwaltung mit Datum/Zeit
@@ -318,7 +327,7 @@ Bei Problemen oder Fragen:
 - Heizprofile
 
 ### Version 1.0.0
+
 - Erste Version
 - Cloud- und Local-Unterstützung
 - Grundlegende Gerätesteuerung
-

@@ -2,12 +2,12 @@
 
 ## General Information
 
-| Property | Value |
-|----------|-------|
-| **Base URL** | `http://[host]:3000` |
-| **Port** | 3000 (configurable via `PORT` env var) |
+| Property         | Value                                   |
+| ---------------- | --------------------------------------- |
+| **Base URL**     | `http://[host]:3000`                    |
+| **Port**         | 3000 (configurable via `PORT` env var)  |
 | **Content-Type** | `application/json` (except file upload) |
-| **CORS** | Enabled for all origins |
+| **CORS**         | Enabled for all origins                 |
 
 All responses include a `success` field. Error responses use the format:
 
@@ -17,21 +17,21 @@ All responses include a `success` field. Error responses use the format:
 
 ## Endpoint Overview
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/` | Web interface |
-| POST | `/api/upload` | Upload and parse Excel/Numbers file |
-| POST | `/api/schedule` | Create schedule from parsed data |
-| GET | `/api/schedules` | List all schedules |
-| GET | `/api/schedules/:id` | Get specific schedule |
-| POST | `/api/schedules/:id/activate` | Activate a schedule |
-| POST | `/api/schedules/:id/deactivate` | Deactivate a schedule |
-| DELETE | `/api/schedules/:id` | Delete a schedule |
-| GET | `/api/areas` | List all areas |
-| POST | `/api/areas` | Create/update an area |
-| DELETE | `/api/areas/:name` | Delete an area |
-| GET | `/api/profiles` | List heating profiles |
-| GET | `/api/devices` | List all devices |
+| Method | Endpoint                        | Description                         |
+| ------ | ------------------------------- | ----------------------------------- |
+| GET    | `/`                             | Web interface                       |
+| POST   | `/api/upload`                   | Upload and parse Excel/Numbers file |
+| POST   | `/api/schedule`                 | Create schedule from parsed data    |
+| GET    | `/api/schedules`                | List all schedules                  |
+| GET    | `/api/schedules/:id`            | Get specific schedule               |
+| POST   | `/api/schedules/:id/activate`   | Activate a schedule                 |
+| POST   | `/api/schedules/:id/deactivate` | Deactivate a schedule               |
+| DELETE | `/api/schedules/:id`            | Delete a schedule                   |
+| GET    | `/api/areas`                    | List all areas                      |
+| POST   | `/api/areas`                    | Create/update an area               |
+| DELETE | `/api/areas/:name`              | Delete an area                      |
+| GET    | `/api/profiles`                 | List heating profiles               |
+| GET    | `/api/devices`                  | List all devices                    |
 
 ## Endpoints
 
@@ -41,11 +41,12 @@ Upload and parse an Excel or Numbers file.
 
 **Request:** `multipart/form-data`
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `file` | File | Yes | `.xlsx`, `.xls`, or `.numbers` file (max 10 MB) |
+| Field  | Type | Required | Description                                     |
+| ------ | ---- | -------- | ----------------------------------------------- |
+| `file` | File | Yes      | `.xlsx`, `.xls`, or `.numbers` file (max 10 MB) |
 
 **Response (200):**
+
 ```json
 {
   "success": true,
@@ -72,6 +73,7 @@ Upload and parse an Excel or Numbers file.
 Create a new heating schedule from parsed data.
 
 **Request Body:**
+
 ```json
 {
   "name": "Winter-Heizplan",
@@ -89,6 +91,7 @@ Create a new heating schedule from parsed data.
 ```
 
 **Response (200):**
+
 ```json
 {
   "success": true,
@@ -126,10 +129,13 @@ Create a new heating schedule from parsed data.
 List all schedules.
 
 **Response (200):**
+
 ```json
 {
   "success": true,
-  "schedules": [ /* array of schedule objects */ ]
+  "schedules": [
+    /* array of schedule objects */
+  ]
 }
 ```
 
@@ -140,10 +146,13 @@ List all schedules.
 Get a specific schedule by UUID.
 
 **Response (200):**
+
 ```json
 {
   "success": true,
-  "schedule": { /* schedule object */ }
+  "schedule": {
+    /* schedule object */
+  }
 }
 ```
 
@@ -156,6 +165,7 @@ Get a specific schedule by UUID.
 Activate a schedule. Triggers an immediate check-and-execute cycle.
 
 **Response (200):**
+
 ```json
 { "success": true }
 ```
@@ -169,6 +179,7 @@ Activate a schedule. Triggers an immediate check-and-execute cycle.
 Deactivate a schedule.
 
 **Response (200):**
+
 ```json
 { "success": true }
 ```
@@ -182,6 +193,7 @@ Deactivate a schedule.
 Delete a schedule and its JSON file.
 
 **Response (200):**
+
 ```json
 { "success": true }
 ```
@@ -195,6 +207,7 @@ Delete a schedule and its JSON file.
 List all defined areas.
 
 **Response (200):**
+
 ```json
 {
   "success": true,
@@ -216,6 +229,7 @@ List all defined areas.
 Create or update an area.
 
 **Request Body:**
+
 ```json
 {
   "name": "Wohnzimmer",
@@ -224,6 +238,7 @@ Create or update an area.
 ```
 
 **Response (200):**
+
 ```json
 {
   "success": true,
@@ -245,6 +260,7 @@ Create or update an area.
 Delete an area by name.
 
 **Response (200):**
+
 ```json
 { "success": true }
 ```
@@ -258,14 +274,27 @@ Delete an area by name.
 List all available heating profiles.
 
 **Response (200):**
+
 ```json
 {
   "success": true,
   "profiles": [
-    { "name": "Komfort", "temperature": 21.0, "description": "Komfortable Raumtemperatur" },
+    {
+      "name": "Komfort",
+      "temperature": 21.0,
+      "description": "Komfortable Raumtemperatur"
+    },
     { "name": "Nacht", "temperature": 17.0, "description": "Nachtabsenkung" },
-    { "name": "Abwesenheit", "temperature": 16.0, "description": "Temperatur bei Abwesenheit" },
-    { "name": "Reduziert", "temperature": 19.0, "description": "Reduzierte Temperatur" }
+    {
+      "name": "Abwesenheit",
+      "temperature": 16.0,
+      "description": "Temperatur bei Abwesenheit"
+    },
+    {
+      "name": "Reduziert",
+      "temperature": 19.0,
+      "description": "Reduzierte Temperatur"
+    }
   ]
 }
 ```
@@ -277,6 +306,7 @@ List all available heating profiles.
 List all Homematic IP devices (requires addon initialization).
 
 **Response (200):**
+
 ```json
 {
   "success": true,
@@ -300,12 +330,12 @@ List all Homematic IP devices (requires addon initialization).
 
 ## Error Codes
 
-| HTTP Status | Meaning |
-|-------------|---------|
-| 400 | Bad request -- missing parameters, invalid file, parse error |
-| 404 | Resource not found -- schedule or area does not exist |
-| 500 | Internal server error |
-| 503 | Service unavailable -- addon, schedule manager, or area manager not initialized |
+| HTTP Status | Meaning                                                                         |
+| ----------- | ------------------------------------------------------------------------------- |
+| 400         | Bad request -- missing parameters, invalid file, parse error                    |
+| 404         | Resource not found -- schedule or area does not exist                           |
+| 500         | Internal server error                                                           |
+| 503         | Service unavailable -- addon, schedule manager, or area manager not initialized |
 
 ## API Interaction Workflow
 

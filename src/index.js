@@ -1,7 +1,7 @@
-import Config from './config/config.js';
-import CloudClient from './cloud/cloudClient.js';
-import LocalClient from './local/localClient.js';
-import DeviceController from './devices/deviceController.js';
+import Config from "./config/config.js";
+import CloudClient from "./cloud/cloudClient.js";
+import LocalClient from "./local/localClient.js";
+import DeviceController from "./devices/deviceController.js";
 
 /**
  * Homematic IP Addon
@@ -23,20 +23,20 @@ export class HomematicIPAddon {
     // Validiere Konfiguration
     const validation = this.config.validate();
     if (!validation.valid) {
-      throw new Error(`Konfigurationsfehler: ${validation.errors.join(', ')}`);
+      throw new Error(`Konfigurationsfehler: ${validation.errors.join(", ")}`);
     }
 
     // Bestimme Modus
     this.mode = this.config.getMode();
     if (!this.mode) {
-      throw new Error('Keine gültige Konfiguration gefunden');
+      throw new Error("Keine gültige Konfiguration gefunden");
     }
 
     // Erstelle Client basierend auf Modus
-    if (this.mode === 'cloud') {
+    if (this.mode === "cloud") {
       this.client = new CloudClient(this.config.cloud);
       await this.client.authenticate();
-    } else if (this.mode === 'local') {
+    } else if (this.mode === "local") {
       this.client = new LocalClient(this.config.local);
       await this.client.connect();
     }
@@ -53,7 +53,7 @@ export class HomematicIPAddon {
    */
   async getDevices() {
     if (!this.controller) {
-      throw new Error('Addon nicht initialisiert. Rufe initialize() auf.');
+      throw new Error("Addon nicht initialisiert. Rufe initialize() auf.");
     }
     return this.controller.getDevices();
   }
@@ -65,7 +65,7 @@ export class HomematicIPAddon {
    */
   async getDevice(deviceId) {
     if (!this.controller) {
-      throw new Error('Addon nicht initialisiert. Rufe initialize() auf.');
+      throw new Error("Addon nicht initialisiert. Rufe initialize() auf.");
     }
     return this.controller.getDevice(deviceId);
   }
@@ -77,7 +77,7 @@ export class HomematicIPAddon {
    */
   async getDeviceState(deviceId) {
     if (!this.controller) {
-      throw new Error('Addon nicht initialisiert. Rufe initialize() auf.');
+      throw new Error("Addon nicht initialisiert. Rufe initialize() auf.");
     }
     return this.controller.getDeviceState(deviceId);
   }
@@ -90,7 +90,7 @@ export class HomematicIPAddon {
    */
   async setSwitchState(deviceId, on) {
     if (!this.controller) {
-      throw new Error('Addon nicht initialisiert. Rufe initialize() auf.');
+      throw new Error("Addon nicht initialisiert. Rufe initialize() auf.");
     }
     return this.controller.setSwitchState(deviceId, on);
   }
@@ -103,7 +103,7 @@ export class HomematicIPAddon {
    */
   async setDimLevel(deviceId, level) {
     if (!this.controller) {
-      throw new Error('Addon nicht initialisiert. Rufe initialize() auf.');
+      throw new Error("Addon nicht initialisiert. Rufe initialize() auf.");
     }
     return this.controller.setDimLevel(deviceId, level);
   }
@@ -116,7 +116,7 @@ export class HomematicIPAddon {
    */
   async setTemperature(deviceId, temperature) {
     if (!this.controller) {
-      throw new Error('Addon nicht initialisiert. Rufe initialize() auf.');
+      throw new Error("Addon nicht initialisiert. Rufe initialize() auf.");
     }
     return this.controller.setTemperature(deviceId, temperature);
   }
@@ -130,7 +130,7 @@ export class HomematicIPAddon {
    */
   async setParameter(deviceId, parameter, value) {
     if (!this.controller) {
-      throw new Error('Addon nicht initialisiert. Rufe initialize() auf.');
+      throw new Error("Addon nicht initialisiert. Rufe initialize() auf.");
     }
     return this.controller.setParameter(deviceId, parameter, value);
   }
@@ -143,7 +143,7 @@ export class HomematicIPAddon {
    */
   async getParameter(deviceId, parameter) {
     if (!this.controller) {
-      throw new Error('Addon nicht initialisiert. Rufe initialize() auf.');
+      throw new Error("Addon nicht initialisiert. Rufe initialize() auf.");
     }
     return this.controller.getParameter(deviceId, parameter);
   }
@@ -170,4 +170,3 @@ export { Config, CloudClient, LocalClient, DeviceController };
 
 // Standard-Export
 export default HomematicIPAddon;
-

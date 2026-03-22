@@ -1,5 +1,5 @@
-import * as XLSX from 'xlsx';
-import fs from 'fs';
+import * as XLSX from "xlsx";
+import fs from "fs";
 
 /**
  * Excel-Datei Parser
@@ -35,7 +35,7 @@ export class ExcelParser {
    */
   normalizeData(data) {
     if (!Array.isArray(data) || data.length === 0) {
-      throw new Error('Excel-Datei ist leer oder ungültig');
+      throw new Error("Excel-Datei ist leer oder ungültig");
     }
 
     // Erkenne Spaltennamen (case-insensitive, verschiedene Varianten)
@@ -62,36 +62,65 @@ export class ExcelParser {
 
     // Normalisiere alle Keys zu lowercase für Vergleich
     const normalizedKeys = {};
-    keys.forEach(key => {
+    keys.forEach((key) => {
       normalizedKeys[key.toLowerCase().trim()] = key;
     });
 
     // Suche nach Bereich/Area
-    columns.area = this.findColumn(normalizedKeys, ['bereich', 'area', 'zone', 'raum']);
-    
+    columns.area = this.findColumn(normalizedKeys, [
+      "bereich",
+      "area",
+      "zone",
+      "raum",
+    ]);
+
     // Suche nach Startdatum/Startzeit
     columns.startDateTime = this.findColumn(normalizedKeys, [
-      'startdatum', 'start datetime', 'startzeit', 'start time', 'start', 'von', 'beginn'
+      "startdatum",
+      "start datetime",
+      "startzeit",
+      "start time",
+      "start",
+      "von",
+      "beginn",
     ]);
-    
+
     // Suche nach Enddatum/Endzeit
     columns.endDateTime = this.findColumn(normalizedKeys, [
-      'enddatum', 'end datetime', 'endzeit', 'end time', 'end', 'bis', 'ende'
+      "enddatum",
+      "end datetime",
+      "endzeit",
+      "end time",
+      "end",
+      "bis",
+      "ende",
     ]);
-    
+
     // Suche nach Temperatur
     columns.temperature = this.findColumn(normalizedKeys, [
-      'temperatur', 'temperature', 'temp', '°c', 'celsius'
+      "temperatur",
+      "temperature",
+      "temp",
+      "°c",
+      "celsius",
     ]);
-    
+
     // Suche nach Heizprofil
     columns.profile = this.findColumn(normalizedKeys, [
-      'heizprofil', 'profil', 'profile', 'heating profile'
+      "heizprofil",
+      "profil",
+      "profile",
+      "heating profile",
     ]);
-    
+
     // Suche nach Zusatzinfo
     columns.notes = this.findColumn(normalizedKeys, [
-      'zusatzinfo', 'notes', 'notiz', 'bemerkung', 'info', 'information'
+      "zusatzinfo",
+      "notes",
+      "notiz",
+      "bemerkung",
+      "info",
+      "information",
     ]);
 
     // Validiere dass mindestens Bereich, Start- und Enddatum vorhanden sind
@@ -99,7 +128,9 @@ export class ExcelParser {
       throw new Error('Spalte "Bereich" oder "Area" nicht gefunden');
     }
     if (!columns.startDateTime) {
-      throw new Error('Spalte "Startdatum" oder "Start DateTime" nicht gefunden');
+      throw new Error(
+        'Spalte "Startdatum" oder "Start DateTime" nicht gefunden',
+      );
     }
     if (!columns.endDateTime) {
       throw new Error('Spalte "Enddatum" oder "End DateTime" nicht gefunden');
@@ -133,14 +164,20 @@ export class ExcelParser {
   parseRow(row, columnMap, lineNumber) {
     const area = row[columnMap.area];
     if (!area) {
-      throw new Error('Bereich fehlt');
+      throw new Error("Bereich fehlt");
     }
 
-    const startDateTime = this.parseDateTime(row[columnMap.startDateTime], 'Startdatum');
-    const endDateTime = this.parseDateTime(row[columnMap.endDateTime], 'Enddatum');
+    const startDateTime = this.parseDateTime(
+      row[columnMap.startDateTime],
+      "Startdatum",
+    );
+    const endDateTime = this.parseDateTime(
+      row[columnMap.endDateTime],
+      "Enddatum",
+    );
 
     if (startDateTime >= endDateTime) {
-      throw new Error('Startdatum muss vor Enddatum liegen');
+      throw new Error("Startdatum muss vor Enddatum liegen");
     }
 
     const temperature = this.parseTemperature(row[columnMap.temperature]);
@@ -153,7 +190,7 @@ export class ExcelParser {
       endDateTime: endDateTime.toISOString(),
       temperature,
       profile,
-      notes
+      notes,
     };
   }
 
@@ -174,7 +211,7 @@ export class ExcelParser {
     }
 
     // Wenn es eine Excel-Seriennummer ist (Tage seit 1900)
-    if (typeof value === 'number') {
+    if (typeof value === "number") {
       const excelEpoch = new Date(1899, 11, 30);
       const date = new Date(excelEpoch.getTime() + value * 24 * 60 * 60 * 1000);
       if (!isNaN(date.getTime())) {
@@ -184,7 +221,7 @@ export class ExcelParser {
 
     // Versuche verschiedene String-Formate
     const str = String(value).trim();
-    
+
     // ISO Format: YYYY-MM-DD HH:MM oder YYYY-MM-DDTHH:MM
     const isoMatch = str.match(/^(\d{4})-(\d{2})-(\d{2})[T\s](\d{2}):(\d{2})/);
     if (isoMatch) {
@@ -193,7 +230,7 @@ export class ExcelParser {
         parseInt(isoMatch[2]) - 1,
         parseInt(isoMatch[3]),
         parseInt(isoMatch[4]),
-        parseInt(isoMatch[5])
+        parseInt(isoMatch[5]),
       );
       if (!isNaN(date.getTime())) {
         return date;
@@ -208,7 +245,7 @@ export class ExcelParser {
         parseInt(deMatch[2]) - 1,
         parseInt(deMatch[1]),
         parseInt(deMatch[4]),
-        parseInt(deMatch[5])
+        parseInt(deMatch[5]),
       );
       if (!isNaN(date.getTime())) {
         return date;
@@ -230,8 +267,8 @@ export class ExcelParser {
    * @returns {number} - Temperatur in °C
    */
   parseTemperature(value) {
-    if (value === null || value === undefined || value === '') {
-      throw new Error('Temperatur fehlt');
+    if (value === null || value === undefined || value === "") {
+      throw new Error("Temperatur fehlt");
     }
 
     const temp = parseFloat(value);
@@ -248,4 +285,3 @@ export class ExcelParser {
 }
 
 export default ExcelParser;
-

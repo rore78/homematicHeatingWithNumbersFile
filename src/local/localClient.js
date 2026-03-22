@@ -1,5 +1,5 @@
-import xmlrpc from 'xmlrpc';
-import axios from 'axios';
+import xmlrpc from "xmlrpc";
+import axios from "axios";
 
 /**
  * Lokaler Homematic CCU Client
@@ -10,8 +10,8 @@ export class LocalClient {
     this.config = config;
     this.host = config.host;
     this.port = config.port || 2001;
-    this.username = config.username || '';
-    this.password = config.password || '';
+    this.username = config.username || "";
+    this.password = config.password || "";
     this.useTLS = config.useTLS || false;
     this.client = null;
     this.connected = false;
@@ -23,11 +23,11 @@ export class LocalClient {
    */
   _getClient() {
     if (!this.client) {
-      const protocol = this.useTLS ? 'https' : 'http';
+      const protocol = this.useTLS ? "https" : "http";
       const options = {
         host: this.host,
         port: this.port,
-        path: '/'
+        path: "/",
       };
 
       if (this.useTLS) {
@@ -65,7 +65,7 @@ export class LocalClient {
   async connect() {
     try {
       // Test-Verbindung durch Abrufen der System-Variablen
-      await this._call('system.listMethods');
+      await this._call("system.listMethods");
       this.connected = true;
       return true;
     } catch (error) {
@@ -80,7 +80,7 @@ export class LocalClient {
    */
   async getDevices() {
     try {
-      const devices = await this._call('listDevices');
+      const devices = await this._call("listDevices");
       return devices || [];
     } catch (error) {
       throw new Error(`Fehler beim Abrufen der Geräte: ${error.message}`);
@@ -95,8 +95,10 @@ export class LocalClient {
   async getDevice(deviceId) {
     try {
       const devices = await this.getDevices();
-      const device = devices.find(d => d.ADDRESS === deviceId || d.ID === deviceId);
-      
+      const device = devices.find(
+        (d) => d.ADDRESS === deviceId || d.ID === deviceId,
+      );
+
       if (!device) {
         throw new Error(`Gerät mit ID ${deviceId} nicht gefunden`);
       }
@@ -115,7 +117,7 @@ export class LocalClient {
    */
   async getValue(deviceId, parameter) {
     try {
-      const value = await this._call('getValue', [deviceId, parameter]);
+      const value = await this._call("getValue", [deviceId, parameter]);
       return value;
     } catch (error) {
       throw new Error(`Fehler beim Abrufen des Wertes: ${error.message}`);
@@ -131,7 +133,7 @@ export class LocalClient {
    */
   async setValue(deviceId, parameter, value) {
     try {
-      const result = await this._call('setValue', [deviceId, parameter, value]);
+      const result = await this._call("setValue", [deviceId, parameter, value]);
       return result === true || result === 1;
     } catch (error) {
       throw new Error(`Fehler beim Setzen des Wertes: ${error.message}`);
@@ -145,7 +147,7 @@ export class LocalClient {
    * @returns {Promise<boolean>}
    */
   async setSwitchState(deviceId, on) {
-    return this.setValue(deviceId, 'STATE', on);
+    return this.setValue(deviceId, "STATE", on);
   }
 
   /**
@@ -156,7 +158,7 @@ export class LocalClient {
    */
   async setDimLevel(deviceId, level) {
     const dimValue = Math.max(0, Math.min(1.0, level));
-    return this.setValue(deviceId, 'LEVEL', dimValue);
+    return this.setValue(deviceId, "LEVEL", dimValue);
   }
 
   /**
@@ -166,7 +168,7 @@ export class LocalClient {
    * @returns {Promise<boolean>}
    */
   async setTemperature(deviceId, temperature) {
-    return this.setValue(deviceId, 'SET_TEMPERATURE', temperature);
+    return this.setValue(deviceId, "SET_TEMPERATURE", temperature);
   }
 
   /**
@@ -179,14 +181,14 @@ export class LocalClient {
       const device = await this.getDevice(deviceId);
       const state = {
         id: device.ADDRESS || device.ID,
-        name: device.NAME || '',
-        type: device.TYPE || '',
-        channels: []
+        name: device.NAME || "",
+        type: device.TYPE || "",
+        channels: [],
       };
 
       // Versuche Channel-Informationen abzurufen
       try {
-        const paramset = await this._call('getParamset', [deviceId, 'VALUES']);
+        const paramset = await this._call("getParamset", [deviceId, "VALUES"]);
         state.parameters = paramset || {};
       } catch (e) {
         // Ignoriere Fehler beim Abrufen der Parameter
@@ -204,17 +206,18 @@ export class LocalClient {
    */
   async getSystemInfo() {
     try {
-      const version = await this._call('getVersion');
-      const methods = await this._call('system.listMethods');
+      const version = await this._call("getVersion");
+      const methods = await this._call("system.listMethods");
       return {
         version,
-        methods: methods.length
+        methods: methods.length,
       };
     } catch (error) {
-      throw new Error(`Fehler beim Abrufen der System-Informationen: ${error.message}`);
+      throw new Error(
+        `Fehler beim Abrufen der System-Informationen: ${error.message}`,
+      );
     }
   }
 }
 
 export default LocalClient;
-

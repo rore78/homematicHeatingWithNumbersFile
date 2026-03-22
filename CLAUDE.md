@@ -35,6 +35,7 @@ This is a Node.js ES Module project (`"type": "module"`) for controlling Homemat
 ### Module Relationships
 
 `server.js` imports and wires together all modules:
+
 - `HomematicIPAddon` + `Config` for device access
 - `ScheduleManager` for schedule CRUD + 60-second execution loop
 - `AreaManager` for mapping area names to device IDs (persisted in `areas.json`)
@@ -50,6 +51,7 @@ This is a Node.js ES Module project (`"type": "module"`) for controlling Homemat
 ### Persistence
 
 File-based, no database:
+
 - `schedules/{uuid}.json` — one file per schedule
 - `areas.json` — all area definitions
 - `uploads/` — temporary (deleted after parsing)
