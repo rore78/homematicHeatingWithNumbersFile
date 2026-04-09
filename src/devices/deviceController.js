@@ -129,6 +129,51 @@ export class DeviceController {
    * @param {*} value - Parameterwert
    * @returns {Promise<boolean>}
    */
+  async setHeatingProfile(deviceId, profileNumber, options = {}) {
+    const { channel = "1" } = options;
+
+    if (![1, 2, 3].includes(profileNumber)) {
+      throw new Error(
+        `Ungueltiges Geraeteprofil: ${profileNumber}. Erlaubt: 1, 2 oder 3.`,
+      );
+    }
+
+    try {
+      if (this.isCloud) {
+        return await this.client.setHeatingProfile(deviceId, profileNumber);
+      } else {
+        const targetId = this._resolveChannelId(deviceId, channel);
+        return await this.client.setHeatingProfile(targetId, profileNumber);
+      }
+    } catch (error) {
+      throw new Error(
+        `Fehler beim Setzen des Heizprofils: ${error.message}`,
+      );
+    }
+  }
+
+  async getHeatingProfile(deviceId, options = {}) {
+    const { channel = "1" } = options;
+
+    try {
+      if (this.isCloud) {
+        return await this.client.getHeatingProfile(deviceId);
+      } else {
+        const targetId = this._resolveChannelId(deviceId, channel);
+        return await this.client.getHeatingProfile(targetId);
+      }
+    } catch (error) {
+      throw new Error(
+        `Fehler beim Abrufen des Heizprofils: ${error.message}`,
+      );
+    }
+  }
+
+  _resolveChannelId(deviceId, channel) {
+    if (deviceId.includes(":")) return deviceId;
+    return `${deviceId}:${channel}`;
+  }
+
   async setParameter(deviceId, parameter, value) {
     try {
       if (this.isCloud) {

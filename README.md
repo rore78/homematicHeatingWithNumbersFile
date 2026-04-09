@@ -15,15 +15,49 @@ Ein Node.js-basiertes Addon zur Steuerung von Homematic IP Geräten über Cloud-
 - ✅ **Bereichs-Management (Areas) für mehrere Geräte**
 - ✅ **Heizprofile (Komfort, Nacht, Abwesenheit, etc.)**
 
-## Installation
+## Installation auf CCU3
+
+### Voraussetzungen
+
+1. CCU3 mit Firmware 3.75 oder neuer
+2. "Node.js fuer CCU"-Addon installiert (Node.js >= 18)
+
+### Installation
+
+1. Neuestes Release herunterladen: `my-homematic-addon-X.X.X.tar.gz`
+2. CCU3-Weboberflaeche oeffnen -> Einstellungen -> Systemsteuerung -> Zusatzsoftware
+3. "Datei waehlen" -> tar.gz auswaehlen -> "Installieren"
+4. Warten bis "Installation erfolgreich" erscheint
+5. Web-UI oeffnen: `http://[CCU-IP]:8080`
+
+### Konfiguration
+
+Die Datei `/usr/local/addons/my-homematic-addon/.env` enthaelt die Konfiguration:
+
+| Variable | Beschreibung | Standard |
+|---|---|---|
+| `PORT` | Web-UI Port | 8080 |
+| `LOG_LEVEL` | Log-Detailgrad: debug, info, warn, error | info |
+| `HOMEMATIC_MODE` | Verbindungsmodus | local |
+| `HOMEMATIC_CCU_HOST` | CCU-Adresse | localhost |
+| `HOMEMATIC_CCU_PORT` | XML-RPC Port | 2001 |
+
+### Troubleshooting
+
+- Service-Status: `ssh root@[CCU-IP] /etc/init.d/my-homematic-addon status`
+- Logs: `ssh root@[CCU-IP] tail -f /var/log/my-homematic-addon.log`
+- Health-Check: `curl http://[CCU-IP]:8080/api/health`
+- Neustart: `ssh root@[CCU-IP] /etc/init.d/my-homematic-addon restart`
+
+## Entwicklung
 
 ```bash
 npm install
 ```
 
-## Abhängigkeiten
+## Abhaengigkeiten
 
-- Node.js >= 14.0.0
+- Node.js >= 18.0.0
 - axios - für HTTP-Requests
 - ws - für WebSocket-Verbindungen
 - xmlrpc - für XML-RPC Kommunikation mit lokaler CCU
@@ -226,7 +260,7 @@ Das Addon bietet ein Web-Interface zum Hochladen von Excel/Numbers-Dateien für 
 npm run server
 ```
 
-Das Web-Interface ist dann unter `http://localhost:3000` verfügbar.
+Das Web-Interface ist dann unter `http://localhost:8080` verfuegbar.
 
 ### Excel/Numbers Datei-Format
 
@@ -244,6 +278,7 @@ Die hochgeladene Datei sollte folgende Spalten enthalten:
 ### API-Endpoints
 
 - `GET /` - Web-Interface
+- `GET /api/health` - Health-Check / Status
 - `POST /api/upload` - Datei hochladen
 - `POST /api/schedule` - Zeitplan erstellen
 - `GET /api/schedules` - Alle Zeitpläne

@@ -2,9 +2,10 @@
 
 ## Prerequisites
 
-- **Node.js >= 14** on the CCU (install the "Node.js for CCU" addon first)
+- **Node.js >= 18** on the CCU (install the "Node.js for CCU" addon first)
 - **npm** (bundled with Node.js)
 - **SSH access** to the CCU (for manual installation)
+- **Python 3** with `pyicloud` (optional, only for iCloud file source)
 
 ## Development Setup
 
@@ -15,10 +16,20 @@ npm install
 
 # Start the web server locally
 npm run server
-# -> http://localhost:3000
+# -> http://localhost:8080
 
 # Run usage examples
 npm run example
+
+# Run tests
+npm test
+
+# Run tests in watch mode
+npm run test:watch
+
+# Lint and format
+npm run lint
+npm run format
 ```
 
 ## Build & Package
@@ -38,9 +49,11 @@ flowchart LR
     subgraph "Development Machine"
         Source["Source Code"] --> Script["package-addon.sh"]
         Script --> Clean["rm -rf build/"]
-        Clean --> Copy["Copy to build/addon/:<br/>src/, public/, server.js,<br/>package.json, README.md,<br/>install.sh, uninstall.sh,<br/>addon.conf, install.conf"]
+        Clean --> NPM["npm ci --production<br/>--ignore-scripts"]
+        NPM --> Copy["Copy to build/addon/:<br/>src/, public/, node_modules/,<br/>server.js, package.json, README.md,<br/>install.sh, uninstall.sh,<br/>addon.conf, install.conf"]
         Copy --> Dirs["Create empty dirs:<br/>schedules/, uploads/"]
-        Dirs --> Tar["tar -czf<br/>my-homematic-addon-1.0.0.tar.gz"]
+        Dirs --> Check["Check for native<br/>ARM modules"]
+        Check --> Tar["tar -czf<br/>my-homematic-addon-1.0.0.tar.gz"]
     end
 
     subgraph "CCU"
@@ -55,7 +68,19 @@ flowchart LR
 ```
 ./
 ├── src/                  # Backend source code
+│   ├── config/           # Configuration management
+│   ├── cloud/            # Cloud API client
+│   ├── local/            # Local CCU client
+│   ├── devices/          # Device controller
+│   ├── scheduler/        # Schedule manager + heating profiles
+│   ├── areas/            # Area management
+│   ├── parser/           # Spreadsheet parser
+│   ├── sources/          # File sources + push manager
+│   ├── polling/          # Polling engine
+│   └── utils/            # Logger and utilities
+├── scripts/              # Python bridge scripts
 ├── public/               # Frontend files
+├── node_modules/         # Production dependencies (pre-installed)
 ├── server.js             # Express server
 ├── package.json          # Dependencies
 ├── README.md             # Documentation
@@ -72,9 +97,11 @@ flowchart LR
 ### Method 1: CCU Web UI
 
 1. Open the CCU web interface
-2. Navigate to **Addons** -> **Addon hinzufugen**
+2. Navigate to **Einstellungen** -> **Systemsteuerung** -> **Zusatzsoftware**
 3. Select the `my-homematic-addon-1.0.0.tar.gz` file
-4. The CCU runs `install.sh` automatically
+4. Click **Installieren**
+5. Wait until "Installation erfolgreich" appears
+6. Open the Web UI: `http://[CCU-IP]:8080`
 
 ### Method 2: SSH
 
@@ -94,14 +121,15 @@ tar -xzf ../my-homematic-addon-1.0.0.tar.gz
 
 The `install.sh` script performs these steps:
 
-1. Checks for Node.js availability
+1. Checks for Node.js >= 18 availability
 2. Creates `/usr/local/addons/my-homematic-addon/`
 3. Copies files from `/tmp/addon/`
-4. Creates `uploads/` and `schedules/` subdirectories
-5. Runs `npm install --production --no-audit --no-fund`
-6. Creates an init.d script at `/etc/init.d/my-homematic-addon`
-7. Registers the service (`update-rc.d` or `systemctl`)
-8. Starts the addon
+4. Verifies `node_modules/` is present (pre-installed by build script)
+5. Creates `uploads/` and `schedules/` subdirectories
+6. Generates `.env` file with defaults (only adds missing variables)
+7. Creates an init.d script at `/etc/init.d/my-homematic-addon`
+8. Registers the service (`update-rc.d` or `systemctl`)
+9. Starts the addon
 
 ## CCU File System Layout
 
@@ -117,11 +145,14 @@ graph TD
         A --> G["schedules/*.json"]
         A --> H["uploads/"]
         A --> I["areas.json"]
-        A --> J[".env (optional)"]
+        A --> J["sources.json"]
+        A --> K["push-config.json"]
+        A --> L["polling-status.json"]
+        A --> M[".env"]
 
-        K["/etc/init.d/my-homematic-addon"]
-        L["/var/log/my-homematic-addon.log"]
-        M["/var/run/my-homematic-addon.pid"]
+        N["/etc/init.d/my-homematic-addon"]
+        O["/var/log/my-homematic-addon.log"]
+        P["/var/run/my-homematic-addon.pid"]
     end
 ```
 
@@ -161,6 +192,16 @@ The init script handles:
 
 Create a `.env` file in the addon directory to configure the connection:
 
+**Essential settings:**
+
+```env
+PORT=8080
+LOG_LEVEL=info
+HOMEMATIC_MODE=local
+HOMEMATIC_CCU_HOST=localhost
+HOMEMATIC_CCU_PORT=2001
+```
+
 **Cloud Mode:**
 
 ```env
@@ -193,11 +234,21 @@ HOMEMATIC_MODE=auto
 # Cloud is preferred when both are available
 ```
 
-**Server:**
-
-```env
-PORT=3000
-```
+| Variable                         | Description                   | Default                          |
+| -------------------------------- | ----------------------------- | -------------------------------- |
+| `PORT`                           | Web UI port                   | 8080                             |
+| `LOG_LEVEL`                      | Log detail: debug/info/warn/error | info                         |
+| `HOMEMATIC_MODE`                 | Connection mode               | auto                             |
+| `HOMEMATIC_CCU_HOST`             | CCU address                   | 192.168.1.100                    |
+| `HOMEMATIC_CCU_PORT`             | XML-RPC port                  | 2001                             |
+| `HOMEMATIC_CCU_USERNAME`         | CCU username                  | (none)                           |
+| `HOMEMATIC_CCU_PASSWORD`         | CCU password                  | (none)                           |
+| `HOMEMATIC_CCU_USE_TLS`          | Use TLS for XML-RPC           | false                            |
+| `HOMEMATIC_IP_ACCESS_POINT_SGTIN`| Cloud access point SGTIN      | (none)                           |
+| `HOMEMATIC_IP_AUTH_TOKEN`        | Cloud auth token              | (none)                           |
+| `HOMEMATIC_IP_CLIENT_ID`         | Cloud client ID               | (none)                           |
+| `HOMEMATIC_IP_CLIENT_SECRET`     | Cloud client secret           | (none)                           |
+| `HOMEMATIC_IP_API_URL`           | Cloud API URL                 | https://ps1.homematic.com:6969   |
 
 ### JSON Config File
 
@@ -232,10 +283,15 @@ Run `uninstall.sh` or remove the addon via CCU Web UI. The script:
 
 | Problem                          | Solution                                                                    |
 | -------------------------------- | --------------------------------------------------------------------------- |
-| "Node.js ist nicht installiert!" | Install the "Node.js for CCU" addon first                                   |
-| npm install fails                | Check internet connectivity on CCU; try `npm install --production` manually |
-| Port 3000 already in use         | Set `PORT=3001` in `.env`                                                   |
+| "Node.js ist nicht installiert!" | Install the "Node.js for CCU" addon first (>= 18)                          |
+| npm install fails                | Build includes pre-installed node_modules; check archive integrity          |
+| Port 8080 already in use         | Set `PORT=8081` in `.env`                                                   |
 | Addon not starting after reboot  | Verify init script: `ls -la /etc/init.d/my-homematic-addon`                 |
 | No devices found                 | Check `HOMEMATIC_MODE` and corresponding credentials in `.env`              |
 | Connection refused (local mode)  | Verify CCU IP and that XML-RPC is enabled on port 2001                      |
+| FRITZ!Box connection fails       | Check FTP is enabled on FRITZ!Box; verify credentials and path              |
+| iCloud login fails               | Ensure Python 3 with pyicloud is installed; check 2FA setup                 |
+| Health check: `curl http://[CCU-IP]:8080/api/health` | Returns system status and CCU connection state  |
 | Logs                             | Check `/var/log/my-homematic-addon.log`                                     |
+| Service status                   | `ssh root@[CCU-IP] /etc/init.d/my-homematic-addon status`                  |
+| Restart service                  | `ssh root@[CCU-IP] /etc/init.d/my-homematic-addon restart`                  |

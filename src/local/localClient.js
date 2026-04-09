@@ -45,8 +45,12 @@ export class LocalClient {
    */
   async _call(method, params = []) {
     return new Promise((resolve, reject) => {
+      const timer = setTimeout(() => {
+        reject(new Error(`XML-RPC Timeout: ${method}`));
+      }, 10000);
       const client = this._getClient();
       client.methodCall(method, params, (error, value) => {
+        clearTimeout(timer);
         if (error) {
           reject(new Error(`XML-RPC Fehler: ${error.message}`));
         } else {
@@ -167,6 +171,18 @@ export class LocalClient {
    */
   async setTemperature(deviceId, temperature) {
     return this.setValue(deviceId, "SET_TEMPERATURE", temperature);
+  }
+
+  async setHeatingProfile(deviceId, profileNumber) {
+    await this.setValue(deviceId, "SET_POINT_MODE", 0);
+    await this.setValue(deviceId, "ACTIVE_PROFILE", profileNumber);
+    return true;
+  }
+
+  async getHeatingProfile(deviceId) {
+    const activeProfile = await this.getValue(deviceId, "ACTIVE_PROFILE");
+    const mode = await this.getValue(deviceId, "SET_POINT_MODE");
+    return { activeProfile, mode };
   }
 
   /**

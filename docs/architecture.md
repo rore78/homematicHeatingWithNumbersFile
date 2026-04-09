@@ -2,7 +2,7 @@
 
 ## Overview
 
-my-homematic-addon is a three-tier Node.js application that controls Homematic IP smart home devices through either the Homematic IP Cloud API or a local CCU (Central Control Unit) via XML-RPC. It provides a web interface for uploading Excel-based heating schedules and managing device areas.
+my-homematic-addon is a three-tier Node.js application that controls Homematic IP smart home devices through either the Homematic IP Cloud API or a local CCU (Central Control Unit) via XML-RPC. It provides a web interface for uploading Excel-based heating schedules, managing device areas, and integrating external file sources (USB, FRITZ!Box NAS, iCloud Drive) with automatic polling and push-based import.
 
 ## Component Architecture
 
@@ -13,7 +13,7 @@ graph TB
     end
 
     subgraph "Express Server (server.js)"
-        API["REST API<br/>14 Endpoints"]
+        API["REST API<br/>30+ Endpoints"]
         MW["Middleware<br/>CORS, JSON, Multer"]
     end
 
@@ -26,18 +26,30 @@ graph TB
         SM["ScheduleManager<br/>src/scheduler/scheduleManager.js"]
         HP["HeatingProfile<br/>src/scheduler/heatingProfile.js"]
         AM["AreaManager<br/>src/areas/areaManager.js"]
-        EP["ExcelParser<br/>src/parser/excelParser.js"]
-        NP["NumbersParser<br/>src/parser/numbersParser.js"]
+        SP["SpreadsheetParser<br/>src/parser/spreadsheetParser.js"]
+        FSM["FileSourceManager<br/>src/sources/fileSourceManager.js"]
+        USB["UsbFileSource<br/>src/sources/usbFileSource.js"]
+        FTP["FritzboxFileSource<br/>src/sources/fritzboxFileSource.js"]
+        IC["IcloudFileSource<br/>src/sources/icloudFileSource.js"]
+        PM["PushManager<br/>src/sources/pushManager.js"]
+        PE["PollingEngine<br/>src/polling/pollingEngine.js"]
+        LOG["Logger<br/>src/utils/logger.js"]
     end
 
     subgraph "External Systems"
         Cloud["Homematic IP Cloud<br/>ps1.homematic.com:6969"]
         CCU["Local CCU<br/>XML-RPC Port 2001"]
+        Fritz["FRITZ!Box NAS<br/>FTP"]
+        iCloud["iCloud Drive<br/>Python Bridge"]
+        USBDev["USB Storage"]
     end
 
     subgraph "Persistence (JSON files)"
         SchFiles["schedules/*.json"]
         AreasFile["areas.json"]
+        SourcesFile["sources.json"]
+        PushFile["push-config.json"]
+        PollFile["polling-status.json"]
     end
 
     UI -- "Fetch API" --> API
@@ -46,16 +58,29 @@ graph TB
     API --> SM
     API --> AM
     API --> HP
-    API --> EP
-    API --> NP
+    API --> SP
+    API --> FSM
+    API --> PM
+    API --> PE
     Addon --> Config
     Addon --> DC
     DC --> CC
     DC --> LC
     CC -- "HTTPS/axios" --> Cloud
     LC -- "XML-RPC" --> CCU
+    FSM --> USB
+    FSM --> FTP
+    FSM --> IC
+    USB --> USBDev
+    FTP -- "basic-ftp" --> Fritz
+    IC -- "Python/pyicloud" --> iCloud
+    PE --> FSM
+    PE --> SM
     SM --> SchFiles
     AM --> AreasFile
+    FSM --> SourcesFile
+    PM --> PushFile
+    PE --> PollFile
     SM --> HP
     SM --> AM
 ```
@@ -73,15 +98,27 @@ graph TD
     sm["ScheduleManager<br/>src/scheduler/scheduleManager.js"]
     hp["HeatingProfile<br/>src/scheduler/heatingProfile.js"]
     am["AreaManager<br/>src/areas/areaManager.js"]
-    ep["ExcelParser<br/>src/parser/excelParser.js"]
-    np["NumbersParser<br/>src/parser/numbersParser.js"]
+    sp["SpreadsheetParser<br/>src/parser/spreadsheetParser.js"]
+    fsm["FileSourceManager<br/>src/sources/fileSourceManager.js"]
+    usb["UsbFileSource<br/>src/sources/usbFileSource.js"]
+    ftp["FritzboxFileSource<br/>src/sources/fritzboxFileSource.js"]
+    ic["IcloudFileSource<br/>src/sources/icloudFileSource.js"]
+    pm["PushManager<br/>src/sources/pushManager.js"]
+    pe["PollingEngine<br/>src/polling/pollingEngine.js"]
+    log["Logger<br/>src/utils/logger.js"]
 
     server --> index
     server --> sm
     server --> am
     server --> hp
-    server --> ep
-    server --> np
+    server --> sp
+    server --> fsm
+    server --> usb
+    server --> ftp
+    server --> ic
+    server --> pm
+    server --> pe
+    server --> log
 
     index --> config
     index --> cloud
@@ -93,6 +130,10 @@ graph TD
 
     sm --> hp
     sm --> am
+
+    fsm --> sp
+    pe --> fsm
+    pe --> sm
 ```
 
 ## Connection Mode Strategy
@@ -136,10 +177,13 @@ classDiagram
         +setSwitchState(deviceId, on) boolean
         +setDimLevel(deviceId, level) boolean
         +setTemperature(deviceId, temperature) boolean
+        +setHeatingProfile(deviceId, profileNumber) boolean
+        +getHeatingProfile(deviceId) object
         +setParameter(deviceId, param, value) boolean
         +getParameter(deviceId, param) any
         -_normalizeDevices(devices) Array
         -_normalizeDevice(device) object
+        -_resolveChannelId(deviceId, channel) string
     }
 
     class CloudClient {
@@ -184,15 +228,106 @@ classDiagram
 | `firmware`       | `device.firmwareVersion`        | `device.FIRMWARE`               |
 | `channels`       | `device.functionalChannels`     | `[]` (not available)            |
 
+## File Source Architecture
+
+The addon supports importing heating schedules from multiple external file sources:
+
+```mermaid
+classDiagram
+    class FileSource {
+        <<abstract>>
+        +getType() string
+        +getConfig() object
+        +updateConfig(config) void
+        +isAvailable() boolean
+        +listFiles() Array
+        +readFile(filePath) Buffer
+        +getChecksum(filePath) string
+    }
+
+    class UsbFileSource {
+        -mountPoint: string
+        -subFolder: string
+        +getType() "usb"
+        +isAvailable() boolean
+        +listFiles() Array
+    }
+
+    class FritzboxFileSource {
+        -host: string
+        -port: number
+        -username: string
+        -password: string
+        +getType() "fritzbox"
+        +testConnection() object
+        +isAvailable() boolean
+    }
+
+    class IcloudFileSource {
+        -appleId: string
+        -path: string
+        +getType() "icloud"
+        +login(appleId, password) object
+        +verify2fa(code) object
+        +getAuthState() string
+        +logout() void
+    }
+
+    class FileSourceManager {
+        -sources: Map
+        -config: object
+        +registerSource(source) void
+        +getAllSources() Array
+        +updateSourceConfig(type, config) void
+        +testSource(type) object
+        +scanSource(type) Array
+        +importFile(type, fileName, sm) object
+    }
+
+    class PollingEngine {
+        -fileSourceManager: FileSourceManager
+        -scheduleManager: ScheduleManager
+        +start() void
+        +stop() void
+        +pollCycle() void
+        +triggerPoll(type) object
+        +updateConfig(config) void
+        +getStatus() object
+        +getLog(limit) Array
+    }
+
+    class PushManager {
+        -config: object
+        +enable() void
+        +disable() void
+        +validateApiKey(key) boolean
+        +handleUpload(path, name, sm) object
+        +regenerateKey() string
+    }
+
+    FileSource <|-- UsbFileSource
+    FileSource <|-- FritzboxFileSource
+    FileSource <|-- IcloudFileSource
+    FileSourceManager --> FileSource : manages
+    FileSourceManager --> SpreadsheetParser : uses
+    PollingEngine --> FileSourceManager : polls
+    PollingEngine --> ScheduleManager : imports to
+    PushManager --> SpreadsheetParser : uses
+    PushManager --> ScheduleManager : imports to
+```
+
 ## Data Persistence
 
 The addon uses a file-based persistence model with no database:
 
-| Data              | Storage                 | Format                               |
-| ----------------- | ----------------------- | ------------------------------------ |
-| Heating schedules | `schedules/{uuid}.json` | One JSON file per schedule           |
-| Area definitions  | `areas.json`            | Single JSON file, keyed by area name |
-| Uploaded files    | `uploads/`              | Temporary -- deleted after parsing   |
+| Data                   | Storage                  | Format                               |
+| ---------------------- | ------------------------ | ------------------------------------ |
+| Heating schedules      | `schedules/{uuid}.json`  | One JSON file per schedule           |
+| Area definitions       | `areas.json`             | Single JSON file, keyed by area name |
+| Source configuration   | `sources.json`           | All file source configs              |
+| Push configuration     | `push-config.json`       | Push endpoint config + API key       |
+| Polling status         | `polling-status.json`    | Polling engine state + log           |
+| Uploaded files         | `uploads/`               | Temporary -- deleted after parsing   |
 
 ## Directory Structure
 
@@ -213,11 +348,23 @@ my-homematic-addon/
 │   │   └── heatingProfile.js       # Predefined heating profiles
 │   ├── areas/
 │   │   └── areaManager.js          # Area/zone management
-│   └── parser/
-│       ├── excelParser.js          # Excel file parser (.xlsx/.xls)
-│       └── numbersParser.js        # Apple Numbers file wrapper
+│   ├── parser/
+│   │   └── spreadsheetParser.js    # Unified Excel/Numbers parser
+│   ├── sources/
+│   │   ├── fileSource.js           # Abstract base class for file sources
+│   │   ├── fileSourceManager.js    # Source registry + import logic
+│   │   ├── usbFileSource.js        # USB storage source
+│   │   ├── fritzboxFileSource.js   # FRITZ!Box NAS via FTP
+│   │   ├── icloudFileSource.js     # iCloud Drive via Python bridge
+│   │   └── pushManager.js          # HTTP push endpoint
+│   ├── polling/
+│   │   └── pollingEngine.js        # Automatic file source polling
+│   └── utils/
+│       └── logger.js               # Structured logging utility
+├── scripts/
+│   └── icloud_bridge.py            # Python bridge for iCloud Drive access
 ├── public/
-│   ├── index.html                  # Web UI (upload, areas, schedules)
+│   ├── index.html                  # Web UI (upload, areas, schedules, sources)
 │   ├── app.js                      # Frontend logic (drag-drop, API calls)
 │   └── style.css                   # Responsive styling
 ├── server.js                       # Express server + REST API
@@ -230,6 +377,8 @@ my-homematic-addon/
 │   ├── install.conf                # Installation config
 │   └── package-addon.sh            # Build packaging script
 ├── docs/                           # Documentation
+├── specs/                          # Specifications and progress tracking
+├── tests/                          # Unit and integration tests
 ├── schedules/                      # Runtime: schedule JSON files
 ├── uploads/                        # Runtime: temporary uploaded files
 ├── build/                          # Build output (tar.gz)

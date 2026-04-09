@@ -8,8 +8,7 @@ import fs from "fs";
 import os from "os";
 import { fileURLToPath } from "url";
 import * as XLSX from "xlsx";
-import ExcelParser from "../../src/parser/excelParser.js";
-import NumbersParser from "../../src/parser/numbersParser.js";
+import SpreadsheetParser from "../../src/parser/spreadsheetParser.js";
 
 // We build a minimal test server mirroring server.js routes
 // instead of importing server.js which auto-starts and tries Homematic connection.
@@ -62,13 +61,7 @@ beforeAll(() => {
         return res.status(400).json({ error: "Keine Datei hochgeladen" });
       }
       const filePath = req.file.path;
-      const ext = path.extname(req.file.originalname).toLowerCase();
-      let parser;
-      if (ext === ".numbers") {
-        parser = new NumbersParser();
-      } else {
-        parser = new ExcelParser();
-      }
+      const parser = new SpreadsheetParser();
       const data = parser.parse(filePath);
       fs.unlinkSync(filePath);
       res.json({ success: true, data, count: data.length });

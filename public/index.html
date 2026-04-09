@@ -3,15 +3,18 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Homematic IP Heizungssteuerung</title>
+    <title>Thermo-Flow</title>
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
     <div class="container">
       <header>
-        <h1>🔥 Homematic IP Heizungssteuerung</h1>
+        <div class="header-logo">
+          <img src="towa-logo.svg" alt="redlberger" class="towa-logo" />
+        </div>
+        <h1>🔥 Thermo-Flow</h1>
         <p>
-          Lade Excel/Numbers-Dateien hoch, um Zeitpläne für die
+          Lade Numbers/Excel-Dateien hoch, um Zeitpläne für die
           Heizungssteuerung zu erstellen
         </p>
       </header>
@@ -35,7 +38,7 @@
                 <line x1="12" y1="3" x2="12" y2="15"></line>
               </svg>
               <p>Ziehe eine Datei hierher oder klicke zum Auswählen</p>
-              <p class="upload-hint">Unterstützt: .xlsx, .xls, .numbers</p>
+              <p class="upload-hint">Unterstützt: .numbers,.xlsx, .xls</p>
             </div>
             <input
               type="file"
@@ -75,8 +78,7 @@
                   <th>Bereich</th>
                   <th>Startdatum</th>
                   <th>Enddatum</th>
-                  <th>Temperatur (°C)</th>
-                  <th>Heizprofil</th>
+                  <th>Steuerung</th>
                   <th>Zusatzinfo</th>
                 </tr>
               </thead>
@@ -106,12 +108,186 @@
           <div class="areas-list" id="areasList"></div>
         </section>
 
+        <!-- Dateiquellen -->
+        <section class="sources-section">
+          <h2>Dateiquellen</h2>
+
+          <!-- Polling-Steuerung -->
+          <div class="polling-control" id="pollingControl">
+            <div class="polling-header">
+              <strong>Automatisches Polling</strong>
+            </div>
+            <div class="polling-config">
+              <label class="toggle-label">
+                <input type="checkbox" id="pollingEnabled" />
+                Aktiviert
+              </label>
+              <label>
+                Intervall:
+                <select id="pollingInterval">
+                  <option value="15">15 Minuten</option>
+                  <option value="30">30 Minuten</option>
+                  <option value="60" selected>1 Stunde</option>
+                  <option value="120">2 Stunden</option>
+                  <option value="360">6 Stunden</option>
+                </select>
+              </label>
+              <span id="pollingNextPoll" class="polling-next"></span>
+              <button id="pollAllBtn" class="btn btn-secondary btn-small">
+                Alle Quellen pruefen
+              </button>
+            </div>
+            <div id="pollingLog" class="polling-log" style="display: none">
+              <div class="polling-log-header">
+                <strong>Polling-Protokoll</strong>
+                <button id="toggleLogBtn" class="btn btn-small">Anzeigen</button>
+              </div>
+              <div id="pollingLogEntries" class="polling-log-entries"></div>
+            </div>
+          </div>
+          <div class="source-card" id="usbSource">
+            <div class="source-header">
+              <h3>USB-Laufwerk</h3>
+              <label class="toggle-label">
+                <input type="checkbox" id="usbEnabled" />
+                Aktiviert
+              </label>
+            </div>
+            <div class="source-config">
+              <div class="source-form">
+                <label>
+                  Mount-Punkt:
+                  <input
+                    type="text"
+                    id="usbMountPoint"
+                    placeholder="/media/usb0"
+                  />
+                </label>
+                <label>
+                  Unterordner (optional):
+                  <input
+                    type="text"
+                    id="usbSubFolder"
+                    placeholder="Heizplaene"
+                  />
+                </label>
+              </div>
+              <div class="source-actions">
+                <button
+                  id="usbSaveBtn"
+                  class="btn btn-primary btn-small"
+                >
+                  Speichern
+                </button>
+                <button
+                  id="usbScanBtn"
+                  class="btn btn-secondary btn-small"
+                >
+                  Jetzt pruefen
+                </button>
+              </div>
+            </div>
+            <div id="usbStatus" class="source-status"></div>
+            <div id="usbFilesList" class="source-files"></div>
+          </div>
+
+          <div class="source-card" id="fritzboxSource" style="margin-top: 20px">
+            <div class="source-header">
+              <h3>FTP Server</h3>
+              <label class="toggle-label">
+                <input type="checkbox" id="fbEnabled" />
+                Aktiviert
+              </label>
+            </div>
+            <div class="source-config">
+              <div class="source-form">
+                <label>
+                  Host:
+                  <input type="text" id="fbHost" placeholder="192.168.178.1" />
+                </label>
+                <label>
+                  Port:
+                  <input type="number" id="fbPort" value="21" min="1" />
+                </label>
+              </div>
+              <div class="source-form">
+                <label>
+                  Benutzer:
+                  <input type="text" id="fbUsername" placeholder="fritz-user" />
+                </label>
+                <label>
+                  Passwort:
+                  <input type="password" id="fbPassword" />
+                </label>
+              </div>
+              <div class="source-form">
+                <label>
+                  Pfad:
+                  <input
+                    type="text"
+                    id="fbPath"
+                    placeholder="FRITZ.NAS/Heizung"
+                  />
+                </label>
+              </div>
+              <p class="source-hint">
+                Zugangsdaten werden kodiert auf der CCU gespeichert.
+                FTP-Zugang muss auf dem NAS oder z.B. in der FRITZ!Box unter Internet &gt;
+                Freigaben &gt; FTP aktiviert sein.
+              </p>
+              <div class="source-actions">
+                <button id="fbSaveBtn" class="btn btn-primary btn-small">
+                  Speichern
+                </button>
+                <button id="fbTestBtn" class="btn btn-secondary btn-small">
+                  Verbindung testen
+                </button>
+                <button id="fbScanBtn" class="btn btn-secondary btn-small">
+                  Jetzt pruefen
+                </button>
+              </div>
+            </div>
+            <div id="fbStatus" class="source-status"></div>
+            <div id="fbFilesList" class="source-files"></div>
+          </div>
+
+          <!-- iCloud -->
+          <div class="source-card" id="icloudSource" style="margin-top: 20px">
+            <div class="source-header">
+              <h3>iCloud Drive (Experimentell)</h3>
+              <label class="toggle-label">
+                <input type="checkbox" id="icloudEnabled" />
+                Aktiviert
+              </label>
+            </div>
+            <div id="icloudContent"></div>
+            <div id="icloudStatus" class="source-status"></div>
+            <div id="icloudFilesList" class="source-files"></div>
+          </div>
+
+          <!-- Push-Endpunkt -->
+          <div class="source-card" id="pushSource" style="margin-top: 20px">
+            <div class="source-header">
+              <h3>Push-Endpunkt (Datei-Upload via HTTP)</h3>
+              <label class="toggle-label">
+                <input type="checkbox" id="pushEnabled" />
+                Aktiviert
+              </label>
+            </div>
+            <div id="pushContent"></div>
+          </div>
+        </section>
+
         <!-- Zeitpläne Liste -->
         <section class="schedules-section">
           <h2>Aktive Zeitpläne</h2>
           <div class="schedules-list" id="schedulesList"></div>
         </section>
       </main>
+
+      <footer>
+        <p>&copy; 2026 Roman Redlberger</p>
+      </footer>
     </div>
 
     <script src="app.js"></script>

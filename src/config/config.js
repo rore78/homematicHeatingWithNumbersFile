@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import logger from "../utils/logger.js";
 
 /**
  * Konfigurationsverwaltung für Homematic IP Addon
@@ -61,7 +62,7 @@ export class Config {
         return new Config(configData);
       }
     } catch (error) {
-      console.warn(
+      logger.warn(
         `Konfigurationsdatei konnte nicht geladen werden: ${error.message}`,
       );
     }

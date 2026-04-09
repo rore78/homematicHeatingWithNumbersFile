@@ -77,4 +77,27 @@ describe("HeatingProfile", () => {
     expect(profile.hasProfile("Komfort")).toBe(true);
     expect(profile.hasProfile("Unbekannt")).toBe(false);
   });
+
+  describe("isDeviceProfile (statisch)", () => {
+    it("erkennt Geraeteprofil:2", () => {
+      expect(HeatingProfile.isDeviceProfile("Geraeteprofil:2")).toBe(true);
+    });
+
+    it("erkennt GP:1", () => {
+      expect(HeatingProfile.isDeviceProfile("GP:1")).toBe(true);
+    });
+
+    it("erkennt Profil:3", () => {
+      expect(HeatingProfile.isDeviceProfile("Profil:3")).toBe(true);
+    });
+
+    it("erkennt Komfort NICHT als Geraeteprofil", () => {
+      expect(HeatingProfile.isDeviceProfile("Komfort")).toBe(false);
+    });
+
+    it("erkennt null/leer NICHT als Geraeteprofil", () => {
+      expect(HeatingProfile.isDeviceProfile(null)).toBe(false);
+      expect(HeatingProfile.isDeviceProfile("")).toBe(false);
+    });
+  });
 });

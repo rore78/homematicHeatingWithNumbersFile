@@ -28,6 +28,23 @@ header {
   color: white;
   padding: 30px;
   text-align: center;
+  position: relative;
+}
+
+.header-logo {
+  position: absolute;
+  top: 20px;
+  right: 30px;
+}
+
+.towa-logo {
+  height: 10px;
+  width: auto;
+  transition: opacity 0.3s ease;
+}
+
+.towa-logo:hover {
+  opacity: 1;
 }
 
 header h1 {
@@ -60,7 +77,7 @@ section h2 {
 .upload-area {
   border: 3px dashed #667eea;
   border-radius: 8px;
-  padding: 60px 20px;
+  padding: 5px 5px;
   text-align: center;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -84,9 +101,8 @@ section h2 {
 }
 
 .upload-content p {
-  font-size: 1.1em;
   color: #666;
-  margin: 10px 0;
+  margin: 2px 0;
 }
 
 .upload-hint {
@@ -302,6 +318,188 @@ tbody tr:hover {
   margin-top: 15px;
   display: flex;
   gap: 10px;
+}
+
+/* Dateiquellen */
+.source-card {
+  background: #f8f9ff;
+  border-radius: 8px;
+  padding: 20px;
+  border-left: 4px solid #667eea;
+}
+
+.source-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.source-header h3 {
+  color: #667eea;
+  margin: 0;
+}
+
+.toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.toggle-label input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+}
+
+.source-config {
+  margin-bottom: 15px;
+}
+
+.source-form {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.source-form label {
+  flex: 1;
+  min-width: 200px;
+}
+
+.source-form input {
+  width: 100%;
+  padding: 8px;
+  border: 2px solid #ddd;
+  border-radius: 5px;
+  font-size: 0.95em;
+  margin-top: 4px;
+}
+
+.source-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.source-status {
+  padding: 8px 12px;
+  border-radius: 5px;
+  font-size: 0.9em;
+  margin-bottom: 10px;
+}
+
+.source-status.connected {
+  background: #d4edda;
+  color: #155724;
+}
+
+.source-status.disconnected {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.source-status.info {
+  background: #d1ecf1;
+  color: #0c5460;
+}
+
+.source-files table {
+  width: 100%;
+  font-size: 0.9em;
+}
+
+.source-files .empty-state {
+  padding: 15px;
+  font-size: 0.9em;
+}
+
+.source-hint {
+  font-size: 0.85em;
+  color: #888;
+  margin: 8px 0 12px;
+  line-height: 1.4;
+}
+
+/* Polling */
+.polling-control {
+  background: #f0f2ff;
+  border-radius: 8px;
+  padding: 15px 20px;
+  margin-bottom: 20px;
+  border: 1px solid #dde;
+}
+
+.polling-config {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.polling-config select {
+  padding: 6px 10px;
+  border: 2px solid #ddd;
+  border-radius: 5px;
+  font-size: 0.9em;
+}
+
+.polling-next {
+  font-size: 0.85em;
+  color: #666;
+}
+
+.polling-log {
+  margin-top: 12px;
+}
+
+.polling-log-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.polling-log-entries {
+  max-height: 300px;
+  overflow-y: auto;
+  font-size: 0.85em;
+}
+
+.polling-log-entry {
+  padding: 6px 10px;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  gap: 10px;
+}
+
+.polling-log-entry.change,
+.polling-log-entry.import {
+  border-left: 3px solid #28a745;
+}
+
+.polling-log-entry.error {
+  border-left: 3px solid #dc3545;
+}
+
+.polling-log-entry.disabled {
+  border-left: 3px solid #dc3545;
+}
+
+.polling-log-entry.source_missing {
+  border-left: 3px solid #ffc107;
+}
+
+.polling-log-entry .log-time {
+  color: #999;
+  white-space: nowrap;
+}
+
+.polling-log-entry .log-source {
+  font-weight: 600;
+  white-space: nowrap;
+  min-width: 70px;
 }
 
 /* Loading */

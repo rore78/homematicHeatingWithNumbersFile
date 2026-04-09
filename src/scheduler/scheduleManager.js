@@ -3,6 +3,7 @@ import path from "path";
 import { v4 as uuidv4 } from "uuid";
 import HeatingProfile from "./heatingProfile.js";
 import AreaManager from "../areas/areaManager.js";
+import logger from "../utils/logger.js";
 
 const SCHEDULES_DIR = path.join(process.cwd(), "schedules");
 
@@ -18,6 +19,7 @@ export class ScheduleManager {
     this.schedules = {};
     this.activeSchedules = new Set();
     this.checkInterval = null;
+    this.lastCheckTime = new Date();
 
     // Erstelle schedules Verzeichnis falls nicht vorhanden
     if (!fs.existsSync(SCHEDULES_DIR)) {
@@ -51,13 +53,13 @@ export class ScheduleManager {
             this.activeSchedules.add(schedule.id);
           }
         } catch (error) {
-          console.warn(
+          logger.warn(
             `Fehler beim Laden von Zeitplan ${file}: ${error.message}`,
           );
         }
       }
     } catch (error) {
-      console.warn(`Fehler beim Laden der Zeitpläne: ${error.message}`);
+      logger.warn(`Fehler beim Laden der Zeitpläne: ${error.message}`);
     }
   }
 
@@ -76,7 +78,7 @@ export class ScheduleManager {
    * @param {Array<object>} scheduleData - Zeitplan-Daten aus Parser
    * @returns {object} - Erstellter Zeitplan
    */
-  createSchedule(name, scheduleData) {
+  createSchedule(name, scheduleData, source = null) {
     const id = uuidv4();
 
     // Gruppiere nach Bereichen
@@ -112,6 +114,8 @@ export class ScheduleManager {
         endDateTime: row.endDateTime,
         temperature,
         profile: row.profile || null,
+        deviceProfile: row.deviceProfile ?? null,
+        controlMode: row.controlMode ?? "temperature",
         notes: row.notes || null,
       });
     }
@@ -124,6 +128,10 @@ export class ScheduleManager {
       updatedAt: new Date().toISOString(),
       active: false,
     };
+
+    if (source) {
+      schedule.source = source;
+    }
 
     this.schedules[id] = schedule;
     this.saveSchedule(schedule);
@@ -146,6 +154,61 @@ export class ScheduleManager {
    */
   getAllSchedules() {
     return Object.values(this.schedules);
+  }
+
+  findScheduleBySource(type, fileName) {
+    return (
+      Object.values(this.schedules).find(
+        (s) =>
+          s.source &&
+          s.source.type === type &&
+          s.source.fileName === fileName,
+      ) || null
+    );
+  }
+
+  updateSchedule(id, scheduleData, source = null) {
+    const existing = this.schedules[id];
+    if (!existing) return null;
+
+    // Gruppiere nach Bereichen (gleiche Logik wie createSchedule)
+    const areasMap = {};
+    for (const row of scheduleData) {
+      const areaName = row.area;
+      if (!areasMap[areaName]) {
+        const deviceIds = this.areaManager.resolveDevices(areaName);
+        areasMap[areaName] = { areaName, devices: deviceIds, schedule: [] };
+      }
+      let temperature = row.temperature;
+      if (row.profile) {
+        try {
+          temperature = this.heatingProfile.getTemperature(
+            row.profile,
+            row.temperature,
+          );
+        } catch (_e) {
+          // Verwende direkte Temperatur wenn Profil nicht gefunden
+        }
+      }
+      areasMap[areaName].schedule.push({
+        startDateTime: row.startDateTime,
+        endDateTime: row.endDateTime,
+        temperature,
+        profile: row.profile || null,
+        deviceProfile: row.deviceProfile ?? null,
+        controlMode: row.controlMode ?? "temperature",
+        notes: row.notes || null,
+      });
+    }
+
+    existing.areas = Object.values(areasMap);
+    existing.updatedAt = new Date().toISOString();
+    if (source) {
+      existing.source = source;
+    }
+
+    this.saveSchedule(existing);
+    return existing;
   }
 
   /**
@@ -234,15 +297,21 @@ export class ScheduleManager {
     }
   }
 
+  getActiveCount() {
+    return this.activeSchedules.size;
+  }
+
   /**
    * Prüft und führt Aktionen aus
    */
   async checkAndExecute() {
     if (!this.deviceController) {
-      return; // Kein DeviceController verfügbar
+      return;
     }
 
     const now = new Date();
+    const lastCheck = this.lastCheckTime;
+    this.lastCheckTime = now;
 
     for (const scheduleId of this.activeSchedules) {
       const schedule = this.schedules[scheduleId];
@@ -254,20 +323,48 @@ export class ScheduleManager {
         for (const scheduleItem of area.schedule) {
           const startTime = new Date(scheduleItem.startDateTime);
           const endTime = new Date(scheduleItem.endDateTime);
+          const controlMode = scheduleItem.controlMode || "temperature";
 
-          // Prüfe ob wir im Zeitraum sind
           if (now >= startTime && now <= endTime) {
-            // Setze Temperatur für alle Geräte im Bereich
             for (const deviceId of area.devices) {
               try {
-                await this.deviceController.setTemperature(
-                  deviceId,
-                  scheduleItem.temperature,
-                );
+                if (controlMode === "deviceProfile") {
+                  await this.deviceController.setHeatingProfile(
+                    deviceId,
+                    scheduleItem.deviceProfile,
+                  );
+                } else {
+                  await this.deviceController.setTemperature(
+                    deviceId,
+                    scheduleItem.temperature,
+                  );
+                }
               } catch (error) {
-                console.error(
-                  `Fehler beim Setzen der Temperatur für Gerät ${deviceId}: ${error.message}`,
+                logger.error(
+                  `Fehler beim Steuern von Geraet ${deviceId}: ${error.message}`,
                 );
+              }
+            }
+          }
+
+          // Profil-Zuruecksetzung: wenn deviceProfile-Zeitfenster gerade geendet hat
+          if (controlMode === "deviceProfile") {
+            const justEnded = endTime > lastCheck && endTime <= now;
+            const noActiveWindow = !area.schedule.some((item) => {
+              const s = new Date(item.startDateTime);
+              const e = new Date(item.endDateTime);
+              return now >= s && now <= e;
+            });
+
+            if (justEnded && noActiveWindow) {
+              for (const deviceId of area.devices) {
+                try {
+                  await this.deviceController.setHeatingProfile(deviceId, 1);
+                } catch (error) {
+                  logger.error(
+                    `Fehler beim Zuruecksetzen auf Profil 1 fuer Geraet ${deviceId}: ${error.message}`,
+                  );
+                }
               }
             }
           }

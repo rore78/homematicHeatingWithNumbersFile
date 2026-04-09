@@ -4,18 +4,24 @@ import cors from "cors";
 import path from "path";
 import { fileURLToPath } from "url";
 import fs from "fs";
-import ExcelParser from "./src/parser/excelParser.js";
-import NumbersParser from "./src/parser/numbersParser.js";
+import SpreadsheetParser from "./src/parser/spreadsheetParser.js";
 import ScheduleManager from "./src/scheduler/scheduleManager.js";
 import AreaManager from "./src/areas/areaManager.js";
 import HeatingProfile from "./src/scheduler/heatingProfile.js";
 import HomematicIPAddon, { Config } from "./src/index.js";
+import logger from "./src/utils/logger.js";
+import FileSourceManager from "./src/sources/fileSourceManager.js";
+import UsbFileSource from "./src/sources/usbFileSource.js";
+import FritzboxFileSource from "./src/sources/fritzboxFileSource.js";
+import PollingEngine from "./src/polling/pollingEngine.js";
+import IcloudFileSource from "./src/sources/icloudFileSource.js";
+import PushManager from "./src/sources/pushManager.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8080;
 
 // Middleware
 app.use(cors());
@@ -62,25 +68,44 @@ let addon = null;
 let scheduleManager = null;
 let areaManager = null;
 let heatingProfile = null;
+let fileSourceManager = null;
+let pollingEngine = null;
+let pushManager = null;
 
 // Initialisiere Homematic IP Addon
 async function initializeAddon() {
+  // Unabhaengige Komponenten immer initialisieren
+  areaManager = new AreaManager();
+  heatingProfile = new HeatingProfile();
+  scheduleManager = new ScheduleManager(null);
+
+  fileSourceManager = new FileSourceManager();
+  fileSourceManager.registerSource(new UsbFileSource());
+  fileSourceManager.registerSource(new FritzboxFileSource());
+  fileSourceManager.registerSource(new IcloudFileSource());
+
+  pushManager = new PushManager();
+
+  pollingEngine = new PollingEngine(fileSourceManager, scheduleManager);
+
+  // Homematic-Verbindung versuchen (optional)
   try {
     const config = new Config();
     addon = new HomematicIPAddon(config);
     await addon.initialize();
-
-    scheduleManager = new ScheduleManager(addon.controller);
     scheduleManager.setDeviceController(addon.controller);
-    areaManager = new AreaManager();
-    heatingProfile = new HeatingProfile();
-
-    console.log("Homematic IP Addon initialisiert");
-    return true;
+    logger.info("Homematic IP Addon initialisiert (CCU verbunden)");
   } catch (error) {
-    console.error("Fehler bei der Initialisierung:", error.message);
-    return false;
+    logger.warn(
+      "CCU-Verbindung fehlgeschlagen, Server startet ohne Geraetesteuerung:",
+      error.message,
+    );
   }
+
+  // Polling starten wenn Quellen aktiviert
+  pollingEngine.start();
+
+  return true;
 }
 
 // API Routes
@@ -93,15 +118,7 @@ app.post("/api/upload", upload.single("file"), async (req, res) => {
     }
 
     const filePath = req.file.path;
-    const ext = path.extname(req.file.originalname).toLowerCase();
-
-    let parser;
-    if (ext === ".numbers") {
-      parser = new NumbersParser();
-    } else {
-      parser = new ExcelParser();
-    }
-
+    const parser = new SpreadsheetParser();
     const data = parser.parse(filePath);
 
     // Lösche temporäre Datei
@@ -331,6 +348,509 @@ app.get("/api/devices", async (req, res) => {
   }
 });
 
+// Heizprofil auslesen
+app.get("/api/devices/:id/heating-profile", async (req, res) => {
+  try {
+    if (!addon) {
+      return res.status(503).json({ error: "Addon nicht initialisiert" });
+    }
+    const result = await addon.controller.getHeatingProfile(req.params.id);
+    const modeLabels = { 0: "Auto", 1: "Manuell", 2: "Party" };
+    res.json({
+      success: true,
+      data: {
+        activeProfile: result.activeProfile,
+        mode: result.mode,
+        modeLabel: modeLabels[result.mode] || "Unbekannt",
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Heizprofil setzen
+app.post("/api/devices/:id/heating-profile", async (req, res) => {
+  try {
+    if (!addon) {
+      return res.status(503).json({ error: "Addon nicht initialisiert" });
+    }
+    const { profileNumber } = req.body;
+    if (![1, 2, 3].includes(profileNumber)) {
+      return res.status(400).json({
+        error: "profileNumber muss 1, 2 oder 3 sein.",
+      });
+    }
+    await addon.controller.setHeatingProfile(req.params.id, profileNumber);
+    res.json({
+      success: true,
+      message: `Geraeteprofil ${profileNumber} aktiviert auf Geraet ${req.params.id}.`,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Dateiquellen -- Alle Quellen auflisten
+app.get("/api/sources", async (req, res) => {
+  try {
+    if (!fileSourceManager) {
+      return res
+        .status(503)
+        .json({ error: "FileSourceManager nicht initialisiert" });
+    }
+    const data = await fileSourceManager.getAllSources();
+    res.json({ success: true, data });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Dateiquellen -- Quelle konfigurieren
+app.put("/api/sources/:type", async (req, res) => {
+  try {
+    if (!fileSourceManager) {
+      return res
+        .status(503)
+        .json({ error: "FileSourceManager nicht initialisiert" });
+    }
+    const { type } = req.params;
+    const source = fileSourceManager.getSource(type);
+    if (!source) {
+      return res
+        .status(404)
+        .json({ error: `Unbekannter Quellentyp: ${type}` });
+    }
+
+    const config = req.body;
+
+    // Typ-spezifische Validierung
+    if (type === "usb" && config.enabled && !config.mountPoint) {
+      return res
+        .status(400)
+        .json({ error: "Mount-Punkt darf nicht leer sein wenn aktiviert." });
+    }
+    if (type === "fritzbox" && config.enabled) {
+      if (!config.host) {
+        return res
+          .status(400)
+          .json({ error: "Host darf nicht leer sein wenn aktiviert." });
+      }
+      if (!config.username) {
+        return res
+          .status(400)
+          .json({ error: "Benutzername darf nicht leer sein wenn aktiviert." });
+      }
+      if (!config.password) {
+        return res
+          .status(400)
+          .json({ error: "Passwort darf nicht leer sein wenn aktiviert." });
+      }
+    }
+
+    await fileSourceManager.updateSourceConfig(type, config);
+    res.json({
+      success: true,
+      message: `${type.toUpperCase()}-Dateiquelle aktualisiert.`,
+    });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Dateiquellen -- Verbindungstest
+app.post("/api/sources/:type/test", async (req, res) => {
+  try {
+    if (!fileSourceManager) {
+      return res
+        .status(503)
+        .json({ error: "FileSourceManager nicht initialisiert" });
+    }
+    const { type } = req.params;
+    const source = fileSourceManager.getSource(type);
+    if (!source) {
+      return res
+        .status(404)
+        .json({ error: `Unbekannter Quellentyp: ${type}` });
+    }
+
+    const result = await fileSourceManager.testSource(type);
+    if (result.success) {
+      res.json({ success: true, message: result.message });
+    } else {
+      res.json({ success: false, error: result.message });
+    }
+  } catch (error) {
+    res.json({ success: false, error: error.message });
+  }
+});
+
+// Dateiquellen -- Scan ausloesen
+app.post("/api/sources/:type/scan", async (req, res) => {
+  try {
+    if (!fileSourceManager) {
+      return res
+        .status(503)
+        .json({ error: "FileSourceManager nicht initialisiert" });
+    }
+    const { type } = req.params;
+    const source = fileSourceManager.getSource(type);
+    if (!source) {
+      return res
+        .status(404)
+        .json({ error: `Unbekannter Quellentyp: ${type}` });
+    }
+
+    const result = await fileSourceManager.scanSource(type);
+    res.json({ success: true, data: result });
+  } catch (error) {
+    res.status(400).json({ success: false, error: error.message });
+  }
+});
+
+// Dateiquellen -- Gefundene Dateien auflisten (aus Cache)
+app.get("/api/sources/:type/files", (req, res) => {
+  try {
+    if (!fileSourceManager) {
+      return res
+        .status(503)
+        .json({ error: "FileSourceManager nicht initialisiert" });
+    }
+    const { type } = req.params;
+    const source = fileSourceManager.getSource(type);
+    if (!source) {
+      return res
+        .status(404)
+        .json({ error: `Unbekannter Quellentyp: ${type}` });
+    }
+
+    const result = fileSourceManager.getLastScanResult(type);
+    res.json({ success: true, data: result });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Dateiquellen -- Datei importieren
+app.post("/api/sources/:type/import", async (req, res) => {
+  try {
+    if (!fileSourceManager || !scheduleManager) {
+      return res
+        .status(503)
+        .json({ error: "Manager nicht initialisiert" });
+    }
+    const { type } = req.params;
+    const { fileName } = req.body;
+
+    if (!fileName) {
+      return res.status(400).json({ error: "fileName erforderlich." });
+    }
+
+    const source = fileSourceManager.getSource(type);
+    if (!source) {
+      return res
+        .status(404)
+        .json({ error: `Unbekannter Quellentyp: ${type}` });
+    }
+
+    const result = await fileSourceManager.importFile(
+      type,
+      fileName,
+      scheduleManager,
+    );
+
+    const actionText =
+      result.action === "created" ? "erstellt" : "aktualisiert";
+    const scheduleName = fileName.replace(/\.[^.]+$/, "");
+
+    res.json({
+      success: true,
+      message: `Zeitplan '${scheduleName}' ${actionText}.`,
+      data: result,
+    });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// iCloud -- Login
+app.post("/api/sources/icloud/login", async (req, res) => {
+  try {
+    if (!fileSourceManager) {
+      return res.status(503).json({ error: "Nicht initialisiert" });
+    }
+    const source = fileSourceManager.getSource("icloud");
+    if (!source) {
+      return res.status(404).json({ error: "iCloud-Quelle nicht verfuegbar" });
+    }
+    const { appleId, password } = req.body;
+    if (!appleId || !password) {
+      return res
+        .status(400)
+        .json({ error: "Apple-ID und Passwort erforderlich." });
+    }
+    const result = await source.login(appleId, password);
+    res.json({ success: result.status !== "error", data: result });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// iCloud -- 2FA verifizieren
+app.post("/api/sources/icloud/verify-2fa", async (req, res) => {
+  try {
+    const source = fileSourceManager?.getSource("icloud");
+    if (!source) {
+      return res.status(404).json({ error: "iCloud-Quelle nicht verfuegbar" });
+    }
+    const { code } = req.body;
+    if (!code) {
+      return res.status(400).json({ error: "2FA-Code erforderlich." });
+    }
+    const result = await source.verify2fa(code);
+    res.json({ success: result.status !== "error", data: result });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// iCloud -- Auth-State
+app.get("/api/sources/icloud/auth-state", async (req, res) => {
+  try {
+    const source = fileSourceManager?.getSource("icloud");
+    if (!source) {
+      return res.status(404).json({ error: "iCloud-Quelle nicht verfuegbar" });
+    }
+    res.json({
+      success: true,
+      data: {
+        authState: source.getAuthState(),
+        pythonAvailable: source.pythonAvailable,
+        appleId: source.appleId,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// iCloud -- Logout
+app.post("/api/sources/icloud/logout", async (req, res) => {
+  try {
+    const source = fileSourceManager?.getSource("icloud");
+    if (!source) {
+      return res.status(404).json({ error: "iCloud-Quelle nicht verfuegbar" });
+    }
+    await source.logout();
+    res.json({ success: true, message: "iCloud-Session geloescht." });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Push -- Upload
+app.post("/api/push/upload", upload.single("file"), async (req, res) => {
+  try {
+    if (!pushManager || !scheduleManager) {
+      return res.status(503).json({ error: "Nicht initialisiert" });
+    }
+
+    // API-Key pruefen
+    const authHeader = req.headers.authorization || "";
+    const token = authHeader.replace(/^Bearer\s+/i, "");
+    if (!pushManager.config.enabled) {
+      return res
+        .status(403)
+        .json({ success: false, error: "Push-Endpunkt ist deaktiviert." });
+    }
+    if (!pushManager.validateApiKey(token)) {
+      return res
+        .status(401)
+        .json({ success: false, error: "Ungueltiger API-Key." });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ error: "Keine Datei hochgeladen." });
+    }
+
+    const result = await pushManager.handleUpload(
+      req.file.path,
+      req.file.originalname,
+      scheduleManager,
+    );
+
+    // Temporaere Datei loeschen
+    if (fs.existsSync(req.file.path)) {
+      fs.unlinkSync(req.file.path);
+    }
+
+    const actionText =
+      result.action === "created" ? "erstellt" : "aktualisiert";
+    const name = req.file.originalname.replace(/\.[^.]+$/, "");
+    res.json({
+      success: true,
+      message: `Zeitplan '${name}' ${actionText}.`,
+      data: result,
+    });
+  } catch (error) {
+    if (req.file && fs.existsSync(req.file.path)) {
+      fs.unlinkSync(req.file.path);
+    }
+    res.status(400).json({ success: false, error: error.message });
+  }
+});
+
+// Push -- Config lesen
+app.get("/api/push/config", (req, res) => {
+  try {
+    if (!pushManager) {
+      return res.status(503).json({ error: "Nicht initialisiert" });
+    }
+    res.json({ success: true, data: pushManager.getConfig() });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Push -- Config setzen
+app.put("/api/push/config", (req, res) => {
+  try {
+    if (!pushManager) {
+      return res.status(503).json({ error: "Nicht initialisiert" });
+    }
+    const { enabled } = req.body;
+    if (enabled) {
+      pushManager.enable();
+    } else {
+      pushManager.disable();
+    }
+    res.json({
+      success: true,
+      message: enabled ? "Push-Endpunkt aktiviert." : "Push-Endpunkt deaktiviert.",
+      data: { enabled: pushManager.config.enabled, apiKey: pushManager.config.apiKey },
+    });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Push -- Key regenerieren
+app.post("/api/push/regenerate-key", (req, res) => {
+  try {
+    if (!pushManager) {
+      return res.status(503).json({ error: "Nicht initialisiert" });
+    }
+    const apiKey = pushManager.regenerateKey();
+    res.json({
+      success: true,
+      message: "Neuer API-Key generiert.",
+      data: { apiKey },
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Polling -- Status
+app.get("/api/polling/status", (req, res) => {
+  try {
+    if (!pollingEngine) {
+      return res
+        .status(503)
+        .json({ error: "PollingEngine nicht initialisiert" });
+    }
+    res.json({ success: true, data: pollingEngine.getStatus() });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Polling -- Manueller Trigger
+app.post("/api/polling/trigger", async (req, res) => {
+  try {
+    if (!pollingEngine) {
+      return res
+        .status(503)
+        .json({ error: "PollingEngine nicht initialisiert" });
+    }
+    const { type } = req.body || {};
+    const result = await pollingEngine.triggerPoll(type || null);
+    res.json({
+      success: true,
+      message: "Pruefung abgeschlossen.",
+      data: result,
+    });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Polling -- Konfiguration
+app.put("/api/polling/config", (req, res) => {
+  try {
+    if (!pollingEngine) {
+      return res
+        .status(503)
+        .json({ error: "PollingEngine nicht initialisiert" });
+    }
+    pollingEngine.updateConfig(req.body);
+    res.json({
+      success: true,
+      message: "Polling-Konfiguration aktualisiert.",
+      data: {
+        enabled: pollingEngine.status.enabled,
+        intervalMinutes: pollingEngine.status.intervalMinutes,
+      },
+    });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Polling -- Log
+app.get("/api/polling/log", (req, res) => {
+  try {
+    if (!pollingEngine) {
+      return res
+        .status(503)
+        .json({ error: "PollingEngine nicht initialisiert" });
+    }
+    const limit = parseInt(req.query.limit) || 50;
+    res.json({ success: true, data: pollingEngine.getLog(limit) });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Health-Check
+app.get("/api/health", async (req, res) => {
+  const health = {
+    status: "ok",
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString(),
+    mode: addon ? addon.getMode() : "nicht initialisiert",
+    ccuVerbunden: false,
+    aktiveZeitplaene: 0,
+  };
+
+  try {
+    if (addon) {
+      await addon.getDevices();
+      health.ccuVerbunden = true;
+    }
+  } catch (error) {
+    health.ccuVerbunden = false;
+    health.ccuFehler = error.message;
+  }
+
+  if (scheduleManager) {
+    health.aktiveZeitplaene = scheduleManager.getActiveCount();
+  }
+
+  const statusCode = health.ccuVerbunden ? 200 : 503;
+  res.status(statusCode).json(health);
+});
+
 // Frontend
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
@@ -338,7 +858,7 @@ app.get("/", (req, res) => {
 
 // Error Handler
 app.use((error, req, res, _next) => {
-  console.error("Server Error:", error);
+  logger.error("Server Error:", error);
   res.status(error.status || 500).json({
     error: error.message || "Interner Serverfehler",
   });
@@ -349,22 +869,21 @@ async function startServer() {
   const initialized = await initializeAddon();
 
   if (!initialized) {
-    console.warn(
-      "Warnung: Addon konnte nicht initialisiert werden. Server startet trotzdem.",
+    logger.warn(
+      "Addon konnte nicht initialisiert werden. Server startet trotzdem.",
     );
   }
 
   app.listen(PORT, () => {
-    console.log(`Server läuft auf http://localhost:${PORT}`);
-    console.log(`Upload-Interface verfügbar unter http://localhost:${PORT}`);
+    logger.info(`Server läuft auf http://localhost:${PORT}`);
   });
 }
 
-startServer().catch(console.error);
+startServer().catch((err) => logger.error("Server-Start fehlgeschlagen:", err));
 
 // Graceful Shutdown
 process.on("SIGTERM", () => {
-  console.log("SIGTERM Signal empfangen. Server wird beendet...");
+  logger.info("SIGTERM Signal empfangen. Server wird beendet...");
   if (scheduleManager) {
     scheduleManager.stopScheduler();
   }
@@ -372,7 +891,7 @@ process.on("SIGTERM", () => {
 });
 
 process.on("SIGINT", () => {
-  console.log("SIGINT Signal empfangen. Server wird beendet...");
+  logger.info("SIGINT Signal empfangen. Server wird beendet...");
   if (scheduleManager) {
     scheduleManager.stopScheduler();
   }

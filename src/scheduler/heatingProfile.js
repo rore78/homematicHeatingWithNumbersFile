@@ -114,6 +114,11 @@ export class HeatingProfile {
   hasProfile(profileName) {
     return !!this.profiles[profileName];
   }
+
+  static isDeviceProfile(value) {
+    if (!value || typeof value !== "string") return false;
+    return /^(?:Ger[aä]teprofil|Geraeteprofil|GP|Profil):\d$/i.test(value);
+  }
 }
 
 export default HeatingProfile;

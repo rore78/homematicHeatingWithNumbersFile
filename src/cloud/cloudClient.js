@@ -231,6 +231,27 @@ export class CloudClient {
       temperature,
     );
   }
+
+  async setHeatingProfile(deviceId, profileNumber) {
+    await this.setDeviceData(deviceId, 1, "SET_POINT_MODE", 0);
+    return await this.setDeviceData(
+      deviceId,
+      1,
+      "ACTIVE_PROFILE",
+      profileNumber,
+    );
+  }
+
+  async getHeatingProfile(deviceId) {
+    const state = await this.getCurrentState();
+    const device = state.devices[deviceId];
+    if (!device) throw new Error(`Geraet ${deviceId} nicht gefunden.`);
+    const channel = device.functionalChannels?.["1"];
+    return {
+      activeProfile: channel?.activeProfile ?? null,
+      mode: channel?.setPointMode ?? null,
+    };
+  }
 }
 
 export default CloudClient;

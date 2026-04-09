@@ -1,0 +1,30 @@
+{
+  "usb": {
+    "enabled": true,
+    "mountPoint": "/Users/roman.redlberger/Documents/my-homematic-addon/examples",
+    "subFolder": "",
+    "lastChecked": "2026-03-22T21:05:20.740Z",
+    "files": {
+      "HmIP-Sondertermine.numbers": "33de0377e5aba7dd247b635feb192c09"
+    }
+  },
+  "fritzbox": {
+    "enabled": false,
+    "host": "",
+    "port": 21,
+    "username": "",
+    "password": "",
+    "path": "",
+    "secure": true,
+    "lastChecked": null,
+    "files": {}
+  },
+  "icloud": {
+    "enabled": false,
+    "appleId": "",
+    "password": "",
+    "path": "",
+    "lastChecked": null,
+    "files": {}
+  }
+}

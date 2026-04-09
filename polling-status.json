@@ -1,0 +1,14 @@
+{
+  "enabled": false,
+  "intervalMinutes": 60,
+  "sources": {
+    "usb": {
+      "lastChecked": "2026-03-22T21:05:20.744Z",
+      "lastChanged": null,
+      "consecutiveErrors": 0,
+      "lastError": null,
+      "lastErrorAt": null
+    }
+  },
+  "log": []
+}

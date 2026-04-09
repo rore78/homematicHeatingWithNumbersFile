@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import logger from "../utils/logger.js";
 
 const AREAS_FILE = path.join(process.cwd(), "areas.json");
 
@@ -23,7 +24,7 @@ export class AreaManager {
         return JSON.parse(data);
       }
     } catch (error) {
-      console.warn(`Fehler beim Laden der Bereiche: ${error.message}`);
+      logger.warn(`Fehler beim Laden der Bereiche: ${error.message}`);
     }
     return {};
   }
