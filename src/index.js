@@ -120,12 +120,135 @@ export class HomematicIPPlugin {
   }
 
   _buildConfigTemplate() {
-    // Wird in Schritt 10 ausgefuellt. Leer lassen fuer jetzt.
-    return null;
+    // Plugin-Konfigurationsvorlage fuer die HCU-UI.
+    // Die HCU zeigt diese Felder in der Plugin-Einstellungsseite an.
+    return {
+      properties: {
+        pollingInterval: {
+          dataType: "INTEGER",
+          friendlyName: "Polling-Intervall (Minuten)",
+          description:
+            "Wie oft Dateiquellen auf Aenderungen geprueft werden",
+          defaultValue: "60",
+          minimum: 5,
+          maximum: 1440,
+          required: false,
+          groupId: "general",
+          order: 1,
+        },
+        defaultTemperature: {
+          dataType: "NUMBER",
+          friendlyName: "Standard-Temperatur (°C)",
+          description:
+            "Fallback-Temperatur wenn kein Zeitplan aktiv ist (5-30 °C)",
+          defaultValue: "20",
+          minimum: 5,
+          maximum: 30,
+          required: false,
+          groupId: "heating",
+          order: 1,
+        },
+        absenceTemperature: {
+          dataType: "NUMBER",
+          friendlyName: "Abwesenheits-Temperatur (°C)",
+          description: "Temperatur im Abwesenheits-Modus",
+          defaultValue: "16",
+          minimum: 5,
+          maximum: 30,
+          required: false,
+          groupId: "heating",
+          order: 2,
+        },
+        fritzboxHost: {
+          dataType: "STRING",
+          friendlyName: "FRITZ!Box IP",
+          description: "IP-Adresse der FRITZ!Box fuer NAS-Zugriff",
+          defaultValue: "192.168.178.1",
+          required: false,
+          groupId: "sources",
+          order: 1,
+        },
+        fritzboxUser: {
+          dataType: "STRING",
+          friendlyName: "FRITZ!Box Benutzer",
+          required: false,
+          groupId: "sources",
+          order: 2,
+        },
+        fritzboxPassword: {
+          dataType: "PASSWORD",
+          friendlyName: "FRITZ!Box Passwort",
+          required: false,
+          groupId: "sources",
+          order: 3,
+        },
+        fritzboxPath: {
+          dataType: "STRING",
+          friendlyName: "NAS-Pfad",
+          description: "Pfad auf der FRITZ!Box NAS",
+          defaultValue: "FRITZ.NAS/Heizung/",
+          required: false,
+          groupId: "sources",
+          order: 4,
+        },
+        usbEnabled: {
+          dataType: "BOOLEAN",
+          friendlyName: "USB-Quelle aktivieren",
+          description:
+            "Liest Zeitplandateien von einem USB-Stick (nur CCU3/HCU mit USB)",
+          defaultValue: "false",
+          required: false,
+          groupId: "sources",
+          order: 5,
+        },
+        usbMountPath: {
+          dataType: "STRING",
+          friendlyName: "USB Mount-Pfad",
+          defaultValue: "/media/usb",
+          required: false,
+          groupId: "sources",
+          order: 6,
+        },
+      },
+      groups: {
+        general: {
+          friendlyName: "Allgemein",
+          order: 1,
+        },
+        heating: {
+          friendlyName: "Heizung",
+          description: "Standard-Temperaturen",
+          order: 2,
+        },
+        sources: {
+          friendlyName: "Dateiquellen",
+          description:
+            "Konfiguration externer Quellen fuer Zeitplandateien (USB, FRITZ!Box)",
+          order: 3,
+        },
+      },
+    };
   }
 
-  _onConfigUpdate(_properties) {
-    // Wird in Schritt 10 ausgefuellt.
+  _onConfigUpdate(properties) {
+    // Persistiere geaenderte Konfigurationswerte in .env-artiger Datei.
+    const configFile = path.join(this.dataDir, "plugin-config.json");
+    try {
+      let existing = {};
+      if (fs.existsSync(configFile)) {
+        existing = JSON.parse(fs.readFileSync(configFile, "utf-8"));
+      }
+      const merged = { ...existing, ...properties };
+      fs.writeFileSync(configFile, JSON.stringify(merged, null, 2), "utf-8");
+      logger.info(
+        `Plugin-Konfiguration aktualisiert: ${Object.keys(properties).join(", ")}`,
+      );
+    } catch (err) {
+      logger.error(
+        `Konnte Plugin-Konfiguration nicht speichern: ${err.message}`,
+      );
+      throw err;
+    }
   }
 }
 
