@@ -2,14 +2,16 @@ import fs from "fs";
 import path from "path";
 import logger from "../utils/logger.js";
 
-const AREAS_FILE = path.join(process.cwd(), "areas.json");
-
 /**
  * Bereichs-Manager
- * Verwaltet Bereiche (Areas) die aus einem oder mehreren Geräten bestehen
+ * Verwaltet Bereiche (Areas) die aus einem oder mehreren Geraeten bestehen.
+ * Speicherort standardmaessig DATA_DIR/areas.json (oder process.cwd() als Fallback).
  */
 export class AreaManager {
-  constructor() {
+  constructor(filePath = null) {
+    this.filePath =
+      filePath ||
+      path.join(process.env.DATA_DIR || process.cwd(), "areas.json");
     this.areas = this.loadAreas();
   }
 
@@ -19,8 +21,8 @@ export class AreaManager {
    */
   loadAreas() {
     try {
-      if (fs.existsSync(AREAS_FILE)) {
-        const data = fs.readFileSync(AREAS_FILE, "utf8");
+      if (fs.existsSync(this.filePath)) {
+        const data = fs.readFileSync(this.filePath, "utf8");
         return JSON.parse(data);
       }
     } catch (error) {
@@ -34,7 +36,15 @@ export class AreaManager {
    */
   saveAreas() {
     try {
-      fs.writeFileSync(AREAS_FILE, JSON.stringify(this.areas, null, 2), "utf8");
+      const dir = path.dirname(this.filePath);
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
+      fs.writeFileSync(
+        this.filePath,
+        JSON.stringify(this.areas, null, 2),
+        "utf8",
+      );
     } catch (error) {
       throw new Error(`Fehler beim Speichern der Bereiche: ${error.message}`);
     }

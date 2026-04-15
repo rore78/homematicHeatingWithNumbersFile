@@ -5,6 +5,7 @@ import CloudClient from "./client/cloudClient.js";
 import ConnectApiClient from "./client/connectApiClient.js";
 import DeviceController from "./devices/deviceController.js";
 import ScheduleManager from "./scheduler/scheduleManager.js";
+import AreaManager from "./areas/areaManager.js";
 import logger from "./utils/logger.js";
 
 /**
@@ -57,16 +58,14 @@ export class HomematicIPPlugin {
     // DeviceController
     this.controller = new DeviceController(this.client);
 
-    // ScheduleManager nutzt aktuell process.cwd() fuer Pfade.
-    // Wir chdir() in das dataDir damit Zeitplaene/Bereiche in /data landen.
-    // (Wird in einem spaeteren Schritt durch DATA_DIR-Parameter ersetzt.)
-    const originalCwd = process.cwd();
-    process.chdir(this.dataDir);
-    try {
-      this.scheduleManager = new ScheduleManager(this.controller);
-    } finally {
-      process.chdir(originalCwd);
-    }
+    // AreaManager und ScheduleManager mit DATA_DIR-Pfaden
+    const areaManager = new AreaManager(
+      path.join(this.dataDir, "areas.json"),
+    );
+    this.scheduleManager = new ScheduleManager(this.controller, {
+      schedulesDir: path.join(this.dataDir, "schedules"),
+      areaManager,
+    });
 
     // Event-Handler fuer Live-Updates (nur im HCU-Modus relevant)
     if (this.mode === "hcu") {

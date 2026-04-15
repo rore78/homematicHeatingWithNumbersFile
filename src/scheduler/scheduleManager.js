@@ -5,25 +5,27 @@ import HeatingProfile from "./heatingProfile.js";
 import AreaManager from "../areas/areaManager.js";
 import logger from "../utils/logger.js";
 
-const SCHEDULES_DIR = path.join(process.cwd(), "schedules");
-
 /**
  * Zeitplan-Manager
- * Verwaltet Heizungszeitpläne mit Datum/Zeit-basierten Zeiträumen
+ * Verwaltet Heizungszeitplaene mit Datum/Zeit-basierten Zeitraeumen.
+ * Speicherort standardmaessig DATA_DIR/schedules/ (oder process.cwd()/schedules).
  */
 export class ScheduleManager {
-  constructor(deviceController = null) {
+  constructor(deviceController = null, options = {}) {
     this.deviceController = deviceController;
-    this.heatingProfile = new HeatingProfile();
-    this.areaManager = new AreaManager();
+    this.schedulesDir =
+      options.schedulesDir ||
+      path.join(process.env.DATA_DIR || process.cwd(), "schedules");
+    this.heatingProfile = options.heatingProfile || new HeatingProfile();
+    this.areaManager = options.areaManager || new AreaManager();
     this.schedules = {};
     this.activeSchedules = new Set();
     this.checkInterval = null;
     this.lastCheckTime = new Date();
 
     // Erstelle schedules Verzeichnis falls nicht vorhanden
-    if (!fs.existsSync(SCHEDULES_DIR)) {
-      fs.mkdirSync(SCHEDULES_DIR, { recursive: true });
+    if (!fs.existsSync(this.schedulesDir)) {
+      fs.mkdirSync(this.schedulesDir, { recursive: true });
     }
 
     this.loadAllSchedules();
@@ -35,16 +37,16 @@ export class ScheduleManager {
    */
   loadAllSchedules() {
     try {
-      if (!fs.existsSync(SCHEDULES_DIR)) {
+      if (!fs.existsSync(this.schedulesDir)) {
         return;
       }
 
-      const files = fs.readdirSync(SCHEDULES_DIR);
+      const files = fs.readdirSync(this.schedulesDir);
       const jsonFiles = files.filter((f) => f.endsWith(".json"));
 
       for (const file of jsonFiles) {
         try {
-          const filePath = path.join(SCHEDULES_DIR, file);
+          const filePath = path.join(this.schedulesDir, file);
           const data = fs.readFileSync(filePath, "utf8");
           const schedule = JSON.parse(data);
           this.schedules[schedule.id] = schedule;
@@ -68,7 +70,7 @@ export class ScheduleManager {
    * @param {object} schedule - Zeitplan-Objekt
    */
   saveSchedule(schedule) {
-    const filePath = path.join(SCHEDULES_DIR, `${schedule.id}.json`);
+    const filePath = path.join(this.schedulesDir, `${schedule.id}.json`);
     fs.writeFileSync(filePath, JSON.stringify(schedule, null, 2), "utf8");
   }
 
@@ -266,7 +268,7 @@ export class ScheduleManager {
     this.deactivateSchedule(id);
     delete this.schedules[id];
 
-    const filePath = path.join(SCHEDULES_DIR, `${id}.json`);
+    const filePath = path.join(this.schedulesDir, `${id}.json`);
     if (fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);
     }
