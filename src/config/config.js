@@ -3,8 +3,8 @@ import path from "path";
 import logger from "../utils/logger.js";
 
 /**
- * Konfigurationsverwaltung für Homematic IP Addon
- * Unterstützt sowohl Cloud- als auch lokale CCU-Konfiguration
+ * Konfigurationsverwaltung fuer Homematic IP Addon
+ * Unterstuetzt Cloud- und HCU-Konfiguration (Connect API)
  */
 export class Config {
   constructor(config = {}) {
@@ -28,29 +28,31 @@ export class Config {
         "https://ps1.homematic.com:6969",
     };
 
-    // Lokale CCU-Konfiguration
-    this.local = {
+    // HCU Connect API Konfiguration
+    this.hcu = {
       host:
-        config.local?.host || process.env.HOMEMATIC_CCU_HOST || "192.168.1.100",
+        config.hcu?.host ||
+        process.env.HOMEMATIC_HCU_HOST ||
+        "host.containers.internal",
       port:
-        config.local?.port ||
-        parseInt(process.env.HOMEMATIC_CCU_PORT || "2001"),
-      username:
-        config.local?.username || process.env.HOMEMATIC_CCU_USERNAME || "",
-      password:
-        config.local?.password || process.env.HOMEMATIC_CCU_PASSWORD || "",
-      useTLS:
-        config.local?.useTLS ||
-        process.env.HOMEMATIC_CCU_USE_TLS === "true" ||
-        false,
+        config.hcu?.port ||
+        parseInt(process.env.HOMEMATIC_HCU_PORT || "9001"),
+      pluginId:
+        config.hcu?.pluginId ||
+        process.env.HOMEMATIC_PLUGIN_ID ||
+        "com.redlberger.hmip.heizungssteuerung",
+      authToken:
+        config.hcu?.authToken ||
+        process.env.HOMEMATIC_AUTH_TOKEN ||
+        null,
     };
 
     // Verbindungsmodus
-    this.mode = config.mode || process.env.HOMEMATIC_MODE || "auto"; // 'cloud', 'local', 'auto'
+    this.mode = config.mode || process.env.HOMEMATIC_MODE || "auto"; // 'cloud', 'hcu', 'auto'
   }
 
   /**
-   * Lädt Konfiguration aus einer JSON-Datei
+   * Laedt Konfiguration aus einer JSON-Datei
    * @param {string} configPath - Pfad zur Konfigurationsdatei
    * @returns {Config} - Config-Instanz
    */
@@ -70,7 +72,7 @@ export class Config {
   }
 
   /**
-   * Prüft ob Cloud-Konfiguration vorhanden ist
+   * Prueft ob Cloud-Konfiguration vorhanden ist
    * @returns {boolean}
    */
   hasCloudConfig() {
@@ -78,27 +80,40 @@ export class Config {
   }
 
   /**
-   * Prüft ob lokale Konfiguration vorhanden ist
+   * Prueft ob HCU-Konfiguration vorhanden ist
    * @returns {boolean}
    */
-  hasLocalConfig() {
-    return !!this.local.host;
+  hasHcuConfig() {
+    return !!(this.hcu.host && (this.hcu.authToken || this._hasContainerToken()));
+  }
+
+  /**
+   * Prueft ob ein Container-Token vorhanden ist (/TOKEN Datei)
+   * @returns {boolean}
+   * @private
+   */
+  _hasContainerToken() {
+    try {
+      return fs.existsSync("/TOKEN");
+    } catch {
+      return false;
+    }
   }
 
   /**
    * Bestimmt den zu verwendenden Modus
-   * @returns {string} - 'cloud', 'local' oder null wenn keine Konfiguration vorhanden
+   * @returns {string|null} - 'cloud', 'hcu' oder null
    */
   getMode() {
     if (this.mode === "cloud" && this.hasCloudConfig()) {
       return "cloud";
     }
-    if (this.mode === "local" && this.hasLocalConfig()) {
-      return "local";
+    if (this.mode === "hcu" && this.hasHcuConfig()) {
+      return "hcu";
     }
     if (this.mode === "auto") {
+      if (this.hasHcuConfig()) return "hcu";
       if (this.hasCloudConfig()) return "cloud";
-      if (this.hasLocalConfig()) return "local";
     }
     return null;
   }
@@ -113,7 +128,7 @@ export class Config {
 
     if (!mode) {
       errors.push(
-        "Keine gültige Konfiguration gefunden. Bitte Cloud- oder Local-Konfiguration angeben.",
+        "Keine gueltige Konfiguration gefunden. Bitte Cloud- oder HCU-Konfiguration angeben.",
       );
     }
 
@@ -125,9 +140,14 @@ export class Config {
       }
     }
 
-    if (mode === "local") {
-      if (!this.local.host) {
-        errors.push("Local-Konfiguration: host erforderlich");
+    if (mode === "hcu") {
+      if (!this.hcu.host) {
+        errors.push("HCU-Konfiguration: host erforderlich");
+      }
+      if (!this.hcu.authToken && !this._hasContainerToken()) {
+        errors.push(
+          "HCU-Konfiguration: authToken oder /TOKEN Datei erforderlich",
+        );
       }
     }
 
