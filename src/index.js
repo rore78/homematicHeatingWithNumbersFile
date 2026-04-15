@@ -1,172 +1,154 @@
+import fs from "fs";
+import path from "path";
 import Config from "./config/config.js";
-import CloudClient from "./cloud/cloudClient.js";
-import LocalClient from "./local/localClient.js";
+import CloudClient from "./client/cloudClient.js";
+import ConnectApiClient from "./client/connectApiClient.js";
 import DeviceController from "./devices/deviceController.js";
+import ScheduleManager from "./scheduler/scheduleManager.js";
+import logger from "./utils/logger.js";
 
 /**
- * Homematic IP Addon
- * Hauptklasse für die Verwaltung von Homematic IP Geräten
+ * Homematic IP Plugin -- HCU Connect API + Cloud API
+ *
+ * Startet das Plugin im erkannten Modus (hcu oder cloud), initialisiert
+ * die Module und startet die Zeitplan-Ausfuehrungsschleife.
  */
-export class HomematicIPAddon {
-  constructor(config = {}) {
-    this.config = config instanceof Config ? config : new Config(config);
+export class HomematicIPPlugin {
+  constructor(options = {}) {
+    this.config = options.config instanceof Config ? options.config : new Config(options);
+    this.dataDir = options.dataDir || process.env.DATA_DIR || process.cwd();
     this.client = null;
     this.controller = null;
+    this.scheduleManager = null;
     this.mode = null;
   }
 
   /**
-   * Initialisiert das Addon basierend auf der Konfiguration
-   * @returns {Promise<HomematicIPAddon>}
+   * Startet das Plugin: erstellt Client, verbindet, initialisiert Module.
+   * @returns {Promise<void>}
    */
-  async initialize() {
-    // Validiere Konfiguration
+  async start() {
+    this._prepareDataDir();
+
     const validation = this.config.validate();
     if (!validation.valid) {
       throw new Error(`Konfigurationsfehler: ${validation.errors.join(", ")}`);
     }
 
-    // Bestimme Modus
     this.mode = this.config.getMode();
-    if (!this.mode) {
-      throw new Error("Keine gültige Konfiguration gefunden");
-    }
+    logger.info(`Plugin startet im Modus: ${this.mode}`);
 
-    // Erstelle Client basierend auf Modus
-    if (this.mode === "cloud") {
+    // Client erstellen
+    if (this.mode === "hcu") {
+      this.client = new ConnectApiClient({
+        ...this.config.hcu,
+        configTemplate: this._buildConfigTemplate(),
+        configUpdateHandler: (props) => this._onConfigUpdate(props),
+      });
+    } else if (this.mode === "cloud") {
       this.client = new CloudClient(this.config.cloud);
-      await this.client.authenticate();
-    } else if (this.mode === "local") {
-      this.client = new LocalClient(this.config.local);
-      await this.client.connect();
+    } else {
+      throw new Error(`Unbekannter Modus: ${this.mode}`);
     }
 
-    // Erstelle Device Controller
+    // Verbinden
+    await this.client.connect();
+
+    // DeviceController
     this.controller = new DeviceController(this.client);
 
-    return this;
-  }
-
-  /**
-   * Ruft alle Geräte ab
-   * @returns {Promise<Array>}
-   */
-  async getDevices() {
-    if (!this.controller) {
-      throw new Error("Addon nicht initialisiert. Rufe initialize() auf.");
+    // ScheduleManager nutzt aktuell process.cwd() fuer Pfade.
+    // Wir chdir() in das dataDir damit Zeitplaene/Bereiche in /data landen.
+    // (Wird in einem spaeteren Schritt durch DATA_DIR-Parameter ersetzt.)
+    const originalCwd = process.cwd();
+    process.chdir(this.dataDir);
+    try {
+      this.scheduleManager = new ScheduleManager(this.controller);
+    } finally {
+      process.chdir(originalCwd);
     }
-    return this.controller.getDevices();
-  }
 
-  /**
-   * Ruft ein spezifisches Gerät ab
-   * @param {string} deviceId - Geräte-ID
-   * @returns {Promise<object>}
-   */
-  async getDevice(deviceId) {
-    if (!this.controller) {
-      throw new Error("Addon nicht initialisiert. Rufe initialize() auf.");
+    // Event-Handler fuer Live-Updates (nur im HCU-Modus relevant)
+    if (this.mode === "hcu") {
+      this.client.on("deviceChanged", (device) => {
+        logger.debug(`Geraet geaendert: ${device?.id}`);
+      });
+      this.client.on("disconnected", () => {
+        logger.warn("Verbindung zur HCU verloren");
+      });
     }
-    return this.controller.getDevice(deviceId);
+
+    logger.info("Plugin erfolgreich gestartet");
   }
 
   /**
-   * Ruft den Status eines Geräts ab
-   * @param {string} deviceId - Geräte-ID
-   * @returns {Promise<object>}
+   * Stoppt das Plugin sauber.
+   * @returns {Promise<void>}
    */
-  async getDeviceState(deviceId) {
-    if (!this.controller) {
-      throw new Error("Addon nicht initialisiert. Rufe initialize() auf.");
+  async stop() {
+    if (this.scheduleManager?.stopScheduler) {
+      this.scheduleManager.stopScheduler();
     }
-    return this.controller.getDeviceState(deviceId);
-  }
-
-  /**
-   * Schaltet ein Gerät ein/aus
-   * @param {string} deviceId - Geräte-ID
-   * @param {boolean} on - true = ein, false = aus
-   * @returns {Promise<boolean>}
-   */
-  async setSwitchState(deviceId, on) {
-    if (!this.controller) {
-      throw new Error("Addon nicht initialisiert. Rufe initialize() auf.");
+    if (this.client) {
+      await this.client.disconnect();
     }
-    return this.controller.setSwitchState(deviceId, on);
+    logger.info("Plugin gestoppt");
   }
 
-  /**
-   * Setzt die Helligkeit eines Dimmers
-   * @param {string} deviceId - Geräte-ID
-   * @param {number} level - Helligkeit (0-1.0 oder 0-100)
-   * @returns {Promise<boolean>}
-   */
-  async setDimLevel(deviceId, level) {
-    if (!this.controller) {
-      throw new Error("Addon nicht initialisiert. Rufe initialize() auf.");
-    }
-    return this.controller.setDimLevel(deviceId, level);
-  }
-
-  /**
-   * Setzt die Temperatur eines Thermostats
-   * @param {string} deviceId - Geräte-ID
-   * @param {number} temperature - Temperatur in °C
-   * @returns {Promise<boolean>}
-   */
-  async setTemperature(deviceId, temperature) {
-    if (!this.controller) {
-      throw new Error("Addon nicht initialisiert. Rufe initialize() auf.");
-    }
-    return this.controller.setTemperature(deviceId, temperature);
-  }
-
-  /**
-   * Setzt einen benutzerdefinierten Geräteparameter
-   * @param {string} deviceId - Geräte-ID
-   * @param {string} parameter - Parametername
-   * @param {*} value - Parameterwert
-   * @returns {Promise<boolean>}
-   */
-  async setParameter(deviceId, parameter, value) {
-    if (!this.controller) {
-      throw new Error("Addon nicht initialisiert. Rufe initialize() auf.");
-    }
-    return this.controller.setParameter(deviceId, parameter, value);
-  }
-
-  /**
-   * Ruft einen Geräteparameter ab
-   * @param {string} deviceId - Geräte-ID
-   * @param {string} parameter - Parametername
-   * @returns {Promise<*>}
-   */
-  async getParameter(deviceId, parameter) {
-    if (!this.controller) {
-      throw new Error("Addon nicht initialisiert. Rufe initialize() auf.");
-    }
-    return this.controller.getParameter(deviceId, parameter);
-  }
-
-  /**
-   * Gibt den aktuellen Verbindungsmodus zurück
-   * @returns {string} - 'cloud' oder 'local'
-   */
   getMode() {
     return this.mode;
   }
 
-  /**
-   * Gibt den Client zurück (für erweiterte Nutzung)
-   * @returns {CloudClient|LocalClient}
-   */
   getClient() {
     return this.client;
   }
+
+  getController() {
+    return this.controller;
+  }
+
+  // -- interne Helfer --
+
+  _prepareDataDir() {
+    if (!fs.existsSync(this.dataDir)) {
+      fs.mkdirSync(this.dataDir, { recursive: true });
+    }
+    const sub = ["schedules", "uploads"];
+    for (const s of sub) {
+      const p = path.join(this.dataDir, s);
+      if (!fs.existsSync(p)) fs.mkdirSync(p, { recursive: true });
+    }
+  }
+
+  _buildConfigTemplate() {
+    // Wird in Schritt 10 ausgefuellt. Leer lassen fuer jetzt.
+    return null;
+  }
+
+  _onConfigUpdate(_properties) {
+    // Wird in Schritt 10 ausgefuellt.
+  }
 }
 
-// Export aller Klassen für erweiterte Nutzung
-export { Config, CloudClient, LocalClient, DeviceController };
+// Exporte fuer programmatische Nutzung
+export { Config, CloudClient, ConnectApiClient, DeviceController };
+export default HomematicIPPlugin;
 
-// Standard-Export
-export default HomematicIPAddon;
+// Direkter Start wenn als Hauptmodul ausgefuehrt
+const isMain = import.meta.url === `file://${process.argv[1]}`;
+if (isMain) {
+  const plugin = new HomematicIPPlugin();
+  plugin.start().catch((err) => {
+    logger.error(`Plugin-Start fehlgeschlagen: ${err.message}`);
+    process.exit(1);
+  });
+
+  // SIGTERM/SIGINT Handling
+  const shutdown = async () => {
+    logger.info("Shutdown-Signal empfangen");
+    await plugin.stop();
+    process.exit(0);
+  };
+  process.on("SIGTERM", shutdown);
+  process.on("SIGINT", shutdown);
+}
