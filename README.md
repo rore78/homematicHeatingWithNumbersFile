@@ -34,13 +34,13 @@ Ein Node.js-basiertes Addon zur Steuerung von Homematic IP Geräten über Cloud-
 
 Die Datei `/usr/local/addons/my-homematic-addon/.env` enthaelt die Konfiguration:
 
-| Variable | Beschreibung | Standard |
-|---|---|---|
-| `PORT` | Web-UI Port | 8080 |
-| `LOG_LEVEL` | Log-Detailgrad: debug, info, warn, error | info |
-| `HOMEMATIC_MODE` | Verbindungsmodus | local |
-| `HOMEMATIC_CCU_HOST` | CCU-Adresse | localhost |
-| `HOMEMATIC_CCU_PORT` | XML-RPC Port | 2001 |
+| Variable             | Beschreibung                             | Standard  |
+| -------------------- | ---------------------------------------- | --------- |
+| `PORT`               | Web-UI Port                              | 8080      |
+| `LOG_LEVEL`          | Log-Detailgrad: debug, info, warn, error | info      |
+| `HOMEMATIC_MODE`     | Verbindungsmodus                         | local     |
+| `HOMEMATIC_CCU_HOST` | CCU-Adresse                              | localhost |
+| `HOMEMATIC_CCU_PORT` | XML-RPC Port                             | 2001      |
 
 ### Troubleshooting
 

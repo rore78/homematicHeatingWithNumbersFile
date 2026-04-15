@@ -24,13 +24,13 @@
 
 ## Coverage Summary
 
-| Module | Statements | Branches | Functions |
-|--------|-----------|----------|-----------|
-| ExcelParser | 97.6% | 94.2% | 100% |
-| ScheduleManager | 93.5% | 82.1% | 100% |
-| HeatingProfile | 99.1% | 93.8% | 100% |
-| AreaManager | 91.4% | 81.5% | 100% |
-| Config | 83.5% | 91.4% | 83.3% |
+| Module          | Statements | Branches | Functions |
+| --------------- | ---------- | -------- | --------- |
+| ExcelParser     | 97.6%      | 94.2%    | 100%      |
+| ScheduleManager | 93.5%      | 82.1%    | 100%      |
+| HeatingProfile  | 99.1%      | 93.8%    | 100%      |
+| AreaManager     | 91.4%      | 81.5%    | 100%      |
+| Config          | 83.5%      | 91.4%    | 83.3%     |
 
 ## Verification Results
 

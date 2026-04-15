@@ -6,20 +6,20 @@ Das Addon liest Tabellendateien (.xlsx, .numbers) von einem FRITZ!Box NAS-Share 
 
 ## 2. Entscheidungen aus dem Brainstorming
 
-| Thema | Entscheidung |
-|---|---|
-| Zugriffsprotokoll | FTP mit optionalem FTPS-Upgrade (`basic-ftp` probiert FTPS, faellt auf FTP zurueck) |
-| FTP-Bibliothek | `basic-ftp` (npm) |
-| Zugangsdaten | Base64-kodiert in `sources.json` mit Hinweis in der UI |
-| Timeout/Retry | Ein Retry bei Verbindungsfehler nach 5 Sekunden |
-| Verbindungsmanagement | Pro Aktion: Verbinden -> Aktion -> Trennen |
-| FTP-Pfad | Benutzer gibt Pfad manuell ein |
-| sources.json Schema | Vollstaendig mit host, port, username, password, path, secure |
-| Standardwerte | Keine Voreinstellungen, alle Felder leer |
-| Verbindungstest | Eigener "Verbindung testen"-Button (generischer Endpunkt `POST /api/sources/:type/test`) |
-| Passive/Active FTP | Immer Passive Mode |
-| UI-Layout | USB und FRITZ!Box untereinander im gleichen "Dateiquellen"-Tab |
-| Fehleranzeige | Detailliert mit Hilfetext (Verbindung/Login/Pfad-spezifisch) |
+| Thema                 | Entscheidung                                                                             |
+| --------------------- | ---------------------------------------------------------------------------------------- |
+| Zugriffsprotokoll     | FTP mit optionalem FTPS-Upgrade (`basic-ftp` probiert FTPS, faellt auf FTP zurueck)      |
+| FTP-Bibliothek        | `basic-ftp` (npm)                                                                        |
+| Zugangsdaten          | Base64-kodiert in `sources.json` mit Hinweis in der UI                                   |
+| Timeout/Retry         | Ein Retry bei Verbindungsfehler nach 5 Sekunden                                          |
+| Verbindungsmanagement | Pro Aktion: Verbinden -> Aktion -> Trennen                                               |
+| FTP-Pfad              | Benutzer gibt Pfad manuell ein                                                           |
+| sources.json Schema   | Vollstaendig mit host, port, username, password, path, secure                            |
+| Standardwerte         | Keine Voreinstellungen, alle Felder leer                                                 |
+| Verbindungstest       | Eigener "Verbindung testen"-Button (generischer Endpunkt `POST /api/sources/:type/test`) |
+| Passive/Active FTP    | Immer Passive Mode                                                                       |
+| UI-Layout             | USB und FRITZ!Box untereinander im gleichen "Dateiquellen"-Tab                           |
+| Fehleranzeige         | Detailliert mit Hilfetext (Verbindung/Login/Pfad-spezifisch)                             |
 
 ## 3. Implementierung
 
@@ -30,8 +30,8 @@ Das Addon liest Tabellendateien (.xlsx, .numbers) von einem FRITZ!Box NAS-Share 
 Implementiert `FileSource` (aus Epic 4) fuer FRITZ!Box NAS ueber FTP:
 
 ```javascript
-import { FileSource } from './fileSource.js';
-import * as ftp from 'basic-ftp';
+import { FileSource } from "./fileSource.js";
+import * as ftp from "basic-ftp";
 
 export class FritzboxFileSource extends FileSource {
   constructor(config) {
@@ -107,11 +107,11 @@ Neue Methode (nicht im FileSource-Interface, spezifisch fuer Quellen mit Zugangs
 
 ```javascript
 function encodeCredential(plain) {
-  return Buffer.from(plain, 'utf-8').toString('base64');
+  return Buffer.from(plain, "utf-8").toString("base64");
 }
 
 function decodeCredential(encoded) {
-  return Buffer.from(encoded, 'base64').toString('utf-8');
+  return Buffer.from(encoded, "base64").toString("utf-8");
 }
 ```
 
@@ -149,17 +149,17 @@ function decodeCredential(encoded) {
 
 **Felder (FRITZ!Box-spezifisch):**
 
-| Feld | Typ | Beschreibung |
-|---|---|---|
-| `enabled` | boolean | Ob die Quelle aktiv ist |
-| `host` | string | IP-Adresse oder Hostname der FRITZ!Box |
-| `port` | number | FTP-Port (Standard: 21) |
-| `username` | string | FRITZ!Box-Benutzername |
-| `password` | string | Base64-kodiertes Passwort |
-| `path` | string | Pfad auf dem NAS (z.B. `FRITZ.NAS/Heizung`) |
-| `secure` | boolean | FTPS versuchen (true = FTPS mit Fallback auf FTP) |
-| `lastChecked` | string\|null | ISO-8601 Zeitstempel der letzten Pruefung |
-| `files` | object | Zuletzt gesehene Dateien mit MD5-Hashes |
+| Feld          | Typ          | Beschreibung                                      |
+| ------------- | ------------ | ------------------------------------------------- |
+| `enabled`     | boolean      | Ob die Quelle aktiv ist                           |
+| `host`        | string       | IP-Adresse oder Hostname der FRITZ!Box            |
+| `port`        | number       | FTP-Port (Standard: 21)                           |
+| `username`    | string       | FRITZ!Box-Benutzername                            |
+| `password`    | string       | Base64-kodiertes Passwort                         |
+| `path`        | string       | Pfad auf dem NAS (z.B. `FRITZ.NAS/Heizung`)       |
+| `secure`      | boolean      | FTPS versuchen (true = FTPS mit Fallback auf FTP) |
+| `lastChecked` | string\|null | ISO-8601 Zeitstempel der letzten Pruefung         |
+| `files`       | object       | Zuletzt gesehene Dateien mit MD5-Hashes           |
 
 ### 3.4 FileSourceManager-Anpassungen
 
@@ -175,13 +175,13 @@ Minimale Aenderungen:
 
 #### Bestehende Endpunkte (aus Epic 4, funktionieren bereits fuer `:type = "fritzbox"`)
 
-| Methode | Pfad | Beschreibung |
-|---|---|---|
-| `GET` | `/api/sources` | Alle Quellen auflisten (inkl. FRITZ!Box) |
-| `PUT` | `/api/sources/fritzbox` | FRITZ!Box konfigurieren |
-| `POST` | `/api/sources/fritzbox/scan` | Manueller Scan |
-| `GET` | `/api/sources/fritzbox/files` | Gefundene Dateien |
-| `POST` | `/api/sources/fritzbox/import` | Datei importieren |
+| Methode | Pfad                           | Beschreibung                             |
+| ------- | ------------------------------ | ---------------------------------------- |
+| `GET`   | `/api/sources`                 | Alle Quellen auflisten (inkl. FRITZ!Box) |
+| `PUT`   | `/api/sources/fritzbox`        | FRITZ!Box konfigurieren                  |
+| `POST`  | `/api/sources/fritzbox/scan`   | Manueller Scan                           |
+| `GET`   | `/api/sources/fritzbox/files`  | Gefundene Dateien                        |
+| `POST`  | `/api/sources/fritzbox/import` | Datei importieren                        |
 
 #### Neuer Endpunkt
 
@@ -190,6 +190,7 @@ Minimale Aenderungen:
 Verbindungstest fuer eine konfigurierte Quelle.
 
 **Response (Erfolg):**
+
 ```json
 {
   "success": true,
@@ -198,6 +199,7 @@ Verbindungstest fuer eine konfigurierte Quelle.
 ```
 
 **Response (Fehler):**
+
 ```json
 {
   "success": false,
@@ -206,17 +208,20 @@ Verbindungstest fuer eine konfigurierte Quelle.
 ```
 
 **Validierung bei `PUT /api/sources/fritzbox`:**
+
 - `host` darf nicht leer sein wenn `enabled: true`
 - `username` darf nicht leer sein wenn `enabled: true`
 - `password` darf nicht leer sein wenn `enabled: true`
 - `port` muss eine Zahl > 0 sein (Standard: 21)
 
 **Passwort-Handling bei `GET /api/sources`:**
+
 - FRITZ!Box-Passwort wird NICHT im Response zurueckgegeben
 - Stattdessen: `"password": "********"` wenn ein Passwort gesetzt ist, oder `"password": ""` wenn leer
 - Frontend erkennt `"********"` und sendet diesen Wert beim Speichern NICHT zurueck (nur wenn Benutzer ein neues Passwort eingibt)
 
 **Passwort-Handling bei `PUT /api/sources/fritzbox`:**
+
 - Wenn `password === "********"`: bestehendes Passwort beibehalten, nicht ueberschreiben
 - Wenn `password` ein anderer Wert: Base64-kodieren und speichern
 
@@ -272,13 +277,13 @@ Erweiterung des bestehenden "Dateiquellen"-Tabs (`public/index.html`, `public/ap
 
 **Fehlermeldungen (deutsch):**
 
-| FTP-Fehler | Angezeigte Meldung |
-|---|---|
-| ECONNREFUSED | "Verbindung fehlgeschlagen. Bitte pruefen Sie: 1) Ist die FRITZ!Box unter {host} erreichbar? 2) Ist FTP in der FRITZ!Box unter Internet > Freigaben > FTP aktiviert?" |
-| 530 Login incorrect | "Anmeldung fehlgeschlagen. Bitte Benutzername und Passwort pruefen." |
-| ETIMEDOUT | "Zeitueberschreitung. Die FRITZ!Box unter {host} antwortet nicht." |
-| 550 Path not found | "Pfad '{path}' nicht gefunden auf der FRITZ!Box. Bitte pruefen Sie den Pfad (z.B. FRITZ.NAS/Heizung)." |
-| Sonstiges | "Unbekannter Fehler: {error.message}" |
+| FTP-Fehler          | Angezeigte Meldung                                                                                                                                                    |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ECONNREFUSED        | "Verbindung fehlgeschlagen. Bitte pruefen Sie: 1) Ist die FRITZ!Box unter {host} erreichbar? 2) Ist FTP in der FRITZ!Box unter Internet > Freigaben > FTP aktiviert?" |
+| 530 Login incorrect | "Anmeldung fehlgeschlagen. Bitte Benutzername und Passwort pruefen."                                                                                                  |
+| ETIMEDOUT           | "Zeitueberschreitung. Die FRITZ!Box unter {host} antwortet nicht."                                                                                                    |
+| 550 Path not found  | "Pfad '{path}' nicht gefunden auf der FRITZ!Box. Bitte pruefen Sie den Pfad (z.B. FRITZ.NAS/Heizung)."                                                                |
+| Sonstiges           | "Unbekannter Fehler: {error.message}"                                                                                                                                 |
 
 ## 4. Tests
 
@@ -290,9 +295,9 @@ FTP-Verbindung wird gemockt (kein echter FTP-Server in Unit-Tests):
 
 1. **getType** -- gibt 'fritzbox' zurueck
 2. **getConfig** -- gibt Konfiguration ohne dekodiertes Passwort zurueck
-3. **_connect** -- baut Verbindung mit korrekten Parametern auf (Host, Port, User, dekodiertes Passwort, secure)
-4. **_connect** -- Retry nach Verbindungsfehler (einmal nach 5 Sekunden)
-5. **_connect** -- Fehler nach zweitem fehlgeschlagenem Versuch
+3. **\_connect** -- baut Verbindung mit korrekten Parametern auf (Host, Port, User, dekodiertes Passwort, secure)
+4. **\_connect** -- Retry nach Verbindungsfehler (einmal nach 5 Sekunden)
+5. **\_connect** -- Fehler nach zweitem fehlgeschlagenem Versuch
 6. **isAvailable** -- true bei erfolgreicher Verbindung
 7. **isAvailable** -- false bei Verbindungsfehler
 8. **listFiles** -- filtert .xlsx und .numbers aus FTP-Listing
@@ -340,6 +345,7 @@ FTP-Verbindung wird gemockt (kein echter FTP-Server in Unit-Tests):
 **npm-Paket:** `basic-ftp` (hinzufuegen zu `package.json`)
 
 **Voraussetzungen:**
+
 - Epic 4 muss abgeschlossen sein (FileSourceManager, FileSource-Basisklasse, sources.json, "Dateiquellen"-Tab, REST API Endpunkte)
 - Epic 3 (Numbers-Parser) fuer .numbers-Import
 

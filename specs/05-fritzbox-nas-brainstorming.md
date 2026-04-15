@@ -275,4 +275,3 @@ FTP kann aus verschiedenen Gruenden fehlschlagen (falsche Zugangsdaten, FRITZ!Bo
 - [x] Nein, das reicht -- bitte die Spezifikation schreiben (Empfohlen)
 
 ---
-

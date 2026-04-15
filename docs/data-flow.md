@@ -37,18 +37,18 @@ sequenceDiagram
 
 The SpreadsheetParser performs case-insensitive matching against the column headers in the first row of the spreadsheet. At minimum, **Bereich**, **Startdatum**, and **Enddatum** must be found.
 
-| Internal Field  | Accepted Column Names                                                            |
-| --------------- | -------------------------------------------------------------------------------- |
-| `area`          | Bereich, Area, Zone, Raum                                                        |
-| `startDateTime` | Startdatum, Start DateTime, Startzeit, Start Time, Start, Von, Beginn            |
-| `endDateTime`   | Enddatum, End DateTime, Endzeit, End Time, End, Bis, Ende                        |
-| `startDate`     | Startdatum (combined with separate time column)                                  |
-| `startTime`     | Startzeit (combined with separate date column)                                   |
-| `endDate`       | Enddatum (combined with separate time column)                                    |
-| `endTime`       | Endzeit (combined with separate time column)                                     |
-| `temperature`   | Temperatur, Temperature, Temp, C, Celsius                                        |
-| `profile`       | Heizprofil, Profil, Profile, Heating Profile                                     |
-| `notes`         | Zusatzinfo, Veranstaltung, Notes, Notiz, Bemerkung, Info, Information            |
+| Internal Field  | Accepted Column Names                                                 |
+| --------------- | --------------------------------------------------------------------- |
+| `area`          | Bereich, Area, Zone, Raum                                             |
+| `startDateTime` | Startdatum, Start DateTime, Startzeit, Start Time, Start, Von, Beginn |
+| `endDateTime`   | Enddatum, End DateTime, Endzeit, End Time, End, Bis, Ende             |
+| `startDate`     | Startdatum (combined with separate time column)                       |
+| `startTime`     | Startzeit (combined with separate date column)                        |
+| `endDate`       | Enddatum (combined with separate time column)                         |
+| `endTime`       | Endzeit (combined with separate time column)                          |
+| `temperature`   | Temperatur, Temperature, Temp, C, Celsius                             |
+| `profile`       | Heizprofil, Profil, Profile, Heating Profile                          |
+| `notes`         | Zusatzinfo, Veranstaltung, Notes, Notiz, Bemerkung, Info, Information |
 
 ### Date Parsing Logic
 
@@ -278,11 +278,11 @@ sequenceDiagram
 
 ### File Source Types
 
-| Source     | Transport   | Auth                | Config Fields                                |
-| ---------- | ----------- | ------------------- | -------------------------------------------- |
-| USB        | Local FS    | None                | mountPoint, subFolder                        |
-| FRITZ!Box  | FTP (FTPS)  | Username/Password   | host, port, username, password, path, secure |
-| iCloud     | Python/HTTP | Apple ID + 2FA      | appleId, password, path                      |
+| Source    | Transport   | Auth              | Config Fields                                |
+| --------- | ----------- | ----------------- | -------------------------------------------- |
+| USB       | Local FS    | None              | mountPoint, subFolder                        |
+| FRITZ!Box | FTP (FTPS)  | Username/Password | host, port, username, password, path, secure |
+| iCloud    | Python/HTTP | Apple ID + 2FA    | appleId, password, path                      |
 
 ---
 

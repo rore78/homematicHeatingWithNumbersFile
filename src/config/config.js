@@ -35,16 +35,13 @@ export class Config {
         process.env.HOMEMATIC_HCU_HOST ||
         "host.containers.internal",
       port:
-        config.hcu?.port ||
-        parseInt(process.env.HOMEMATIC_HCU_PORT || "9001"),
+        config.hcu?.port || parseInt(process.env.HOMEMATIC_HCU_PORT || "9001"),
       pluginId:
         config.hcu?.pluginId ||
         process.env.HOMEMATIC_PLUGIN_ID ||
         "com.redlberger.hmip.heizungssteuerung",
       authToken:
-        config.hcu?.authToken ||
-        process.env.HOMEMATIC_AUTH_TOKEN ||
-        null,
+        config.hcu?.authToken || process.env.HOMEMATIC_AUTH_TOKEN || null,
     };
 
     // Verbindungsmodus
@@ -84,7 +81,10 @@ export class Config {
    * @returns {boolean}
    */
   hasHcuConfig() {
-    return !!(this.hcu.host && (this.hcu.authToken || this._hasContainerToken()));
+    return !!(
+      this.hcu.host &&
+      (this.hcu.authToken || this._hasContainerToken())
+    );
   }
 
   /**

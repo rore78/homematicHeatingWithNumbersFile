@@ -17,42 +17,42 @@ All responses include a `success` field. Error responses use the format:
 
 ## Endpoint Overview
 
-| Method | Endpoint                           | Description                            |
-| ------ | ---------------------------------- | -------------------------------------- |
-| GET    | `/`                                | Web interface                          |
-| GET    | `/api/health`                      | Health check / system status           |
-| POST   | `/api/upload`                      | Upload and parse Excel/Numbers file    |
-| POST   | `/api/schedule`                    | Create schedule from parsed data       |
-| GET    | `/api/schedules`                   | List all schedules                     |
-| GET    | `/api/schedules/:id`               | Get specific schedule                  |
-| POST   | `/api/schedules/:id/activate`      | Activate a schedule                    |
-| POST   | `/api/schedules/:id/deactivate`    | Deactivate a schedule                  |
-| DELETE | `/api/schedules/:id`               | Delete a schedule                      |
-| GET    | `/api/areas`                       | List all areas                         |
-| POST   | `/api/areas`                       | Create/update an area                  |
-| DELETE | `/api/areas/:name`                 | Delete an area                         |
-| GET    | `/api/profiles`                    | List heating profiles                  |
-| GET    | `/api/devices`                     | List all devices                       |
-| GET    | `/api/devices/:id/heating-profile` | Get device heating profile             |
-| POST   | `/api/devices/:id/heating-profile` | Set device heating profile             |
-| GET    | `/api/sources`                     | List all file sources                  |
-| PUT    | `/api/sources/:type`               | Configure a file source                |
-| POST   | `/api/sources/:type/test`          | Test file source connection            |
-| POST   | `/api/sources/:type/scan`          | Scan source for files                  |
-| GET    | `/api/sources/:type/files`         | List cached scan results               |
-| POST   | `/api/sources/:type/import`        | Import file from source                |
-| POST   | `/api/sources/icloud/login`        | iCloud login                           |
-| POST   | `/api/sources/icloud/verify-2fa`   | iCloud 2FA verification               |
-| GET    | `/api/sources/icloud/auth-state`   | iCloud authentication state            |
-| POST   | `/api/sources/icloud/logout`       | iCloud logout                          |
-| POST   | `/api/push/upload`                 | Push file upload (API key required)    |
-| GET    | `/api/push/config`                 | Get push endpoint configuration        |
-| PUT    | `/api/push/config`                 | Enable/disable push endpoint           |
-| POST   | `/api/push/regenerate-key`         | Regenerate push API key                |
-| GET    | `/api/polling/status`              | Get polling engine status              |
-| POST   | `/api/polling/trigger`             | Trigger manual poll                    |
-| PUT    | `/api/polling/config`              | Update polling configuration           |
-| GET    | `/api/polling/log`                 | Get polling log entries                |
+| Method | Endpoint                           | Description                         |
+| ------ | ---------------------------------- | ----------------------------------- |
+| GET    | `/`                                | Web interface                       |
+| GET    | `/api/health`                      | Health check / system status        |
+| POST   | `/api/upload`                      | Upload and parse Excel/Numbers file |
+| POST   | `/api/schedule`                    | Create schedule from parsed data    |
+| GET    | `/api/schedules`                   | List all schedules                  |
+| GET    | `/api/schedules/:id`               | Get specific schedule               |
+| POST   | `/api/schedules/:id/activate`      | Activate a schedule                 |
+| POST   | `/api/schedules/:id/deactivate`    | Deactivate a schedule               |
+| DELETE | `/api/schedules/:id`               | Delete a schedule                   |
+| GET    | `/api/areas`                       | List all areas                      |
+| POST   | `/api/areas`                       | Create/update an area               |
+| DELETE | `/api/areas/:name`                 | Delete an area                      |
+| GET    | `/api/profiles`                    | List heating profiles               |
+| GET    | `/api/devices`                     | List all devices                    |
+| GET    | `/api/devices/:id/heating-profile` | Get device heating profile          |
+| POST   | `/api/devices/:id/heating-profile` | Set device heating profile          |
+| GET    | `/api/sources`                     | List all file sources               |
+| PUT    | `/api/sources/:type`               | Configure a file source             |
+| POST   | `/api/sources/:type/test`          | Test file source connection         |
+| POST   | `/api/sources/:type/scan`          | Scan source for files               |
+| GET    | `/api/sources/:type/files`         | List cached scan results            |
+| POST   | `/api/sources/:type/import`        | Import file from source             |
+| POST   | `/api/sources/icloud/login`        | iCloud login                        |
+| POST   | `/api/sources/icloud/verify-2fa`   | iCloud 2FA verification             |
+| GET    | `/api/sources/icloud/auth-state`   | iCloud authentication state         |
+| POST   | `/api/sources/icloud/logout`       | iCloud logout                       |
+| POST   | `/api/push/upload`                 | Push file upload (API key required) |
+| GET    | `/api/push/config`                 | Get push endpoint configuration     |
+| PUT    | `/api/push/config`                 | Enable/disable push endpoint        |
+| POST   | `/api/push/regenerate-key`         | Regenerate push API key             |
+| GET    | `/api/polling/status`              | Get polling engine status           |
+| POST   | `/api/polling/trigger`             | Trigger manual poll                 |
+| PUT    | `/api/polling/config`              | Update polling configuration        |
+| GET    | `/api/polling/log`                 | Get polling log entries             |
 
 ## Endpoints
 
@@ -446,7 +446,14 @@ List all file sources with their configuration and availability.
       "type": "fritzbox",
       "enabled": false,
       "available": false,
-      "config": { "host": "", "port": 21, "username": "", "password": "********", "path": "/", "secure": true }
+      "config": {
+        "host": "",
+        "port": 21,
+        "username": "",
+        "password": "********",
+        "path": "/",
+        "secure": true
+      }
     },
     {
       "type": "icloud",
@@ -553,7 +560,9 @@ Get cached scan results from the last scan.
 ```json
 {
   "success": true,
-  "data": [/* file objects */]
+  "data": [
+    /* file objects */
+  ]
 }
 ```
 
@@ -809,7 +818,9 @@ Omit `type` or set to `null` to poll all enabled sources.
 {
   "success": true,
   "message": "Pruefung abgeschlossen.",
-  "data": { /* poll results */ }
+  "data": {
+    /* poll results */
+  }
 }
 ```
 

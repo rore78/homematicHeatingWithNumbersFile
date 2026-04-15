@@ -15,7 +15,10 @@ function createMockFileSourceManager() {
     config,
     getSource: vi.fn((type) => sources.get(type) || null),
     getAllSources: vi.fn(async () => ({})),
-    scanSource: vi.fn(async () => ({ files: [], checkedAt: new Date().toISOString() })),
+    scanSource: vi.fn(async () => ({
+      files: [],
+      checkedAt: new Date().toISOString(),
+    })),
     importFile: vi.fn(async () => ({
       scheduleId: "test-id",
       action: "created",

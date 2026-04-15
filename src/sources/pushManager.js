@@ -26,15 +26,11 @@ export class PushManager {
   loadConfig() {
     try {
       if (fs.existsSync(this.configFilePath)) {
-        const data = JSON.parse(
-          fs.readFileSync(this.configFilePath, "utf8"),
-        );
+        const data = JSON.parse(fs.readFileSync(this.configFilePath, "utf8"));
         return { ...JSON.parse(JSON.stringify(DEFAULT_CONFIG)), ...data };
       }
     } catch (error) {
-      logger.warn(
-        `Fehler beim Laden der Push-Konfiguration: ${error.message}`,
-      );
+      logger.warn(`Fehler beim Laden der Push-Konfiguration: ${error.message}`);
     }
     return JSON.parse(JSON.stringify(DEFAULT_CONFIG));
   }
@@ -105,27 +101,16 @@ export class PushManager {
       path.extname(originalName),
     );
 
-    const existing = scheduleManager.findScheduleBySource(
-      "push",
-      originalName,
-    );
+    const existing = scheduleManager.findScheduleBySource("push", originalName);
 
     let schedule;
     let action;
 
     if (existing) {
-      schedule = scheduleManager.updateSchedule(
-        existing.id,
-        data,
-        sourceObj,
-      );
+      schedule = scheduleManager.updateSchedule(existing.id, data, sourceObj);
       action = "updated";
     } else {
-      schedule = scheduleManager.createSchedule(
-        scheduleName,
-        data,
-        sourceObj,
-      );
+      schedule = scheduleManager.createSchedule(scheduleName, data, sourceObj);
       action = "created";
     }
 

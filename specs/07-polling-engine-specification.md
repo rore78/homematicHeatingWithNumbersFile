@@ -6,22 +6,22 @@ Ein robuster zentraler Polling-Mechanismus der alle konfigurierten Dateiquellen 
 
 ## 2. Entscheidungen aus dem Brainstorming
 
-| Thema | Entscheidung |
-|---|---|
-| Architektur | Eigene Klasse `PollingEngine` in `src/polling/pollingEngine.js` |
-| Polling-Strategie | Sequenziell -- eine Quelle nach der anderen |
-| Aenderungsverhalten | Vollautomatik -- sofort importieren bei Pruefsummen-Aenderung |
-| Intervall | Konfigurierbar via Dropdown (15 Min, 30 Min, 1 Stunde, 2 Stunden, 6 Stunden), Standard: 60 Min |
-| Fehlerbehandlung | Nach 5 aufeinanderfolgenden Fehlern wird die Quelle automatisch deaktiviert |
-| Status-Daten | Standard: Zeitstempel (lastChecked, lastChanged) + Fehlerinfo (lastError, lastErrorAt, consecutiveErrors) |
-| Status-Persistierung | Eigene Datei `polling-status.json` (Config + Status + Log) |
-| Geloeschte Dateien | Zeitplan als "Quelle nicht verfuegbar" markieren |
-| UI-Platzierung | In bestehende Dateiquellen-Ansicht integriert |
-| "Jetzt pruefen"-Scope | Pro Quelle ein Button + ein globaler Button |
-| REST API | 4 Endpunkte: status, trigger, config, log |
-| Auto-Start | Automatisch wenn mindestens eine Quelle aktiviert ist |
-| Polling-Log | Ringpuffer mit 50 Eintraegen, nur signifikante Events (Aenderung, Import, Fehler) |
-| Timer-Reset | Manueller Poll setzt den automatischen Timer zurueck |
+| Thema                 | Entscheidung                                                                                              |
+| --------------------- | --------------------------------------------------------------------------------------------------------- |
+| Architektur           | Eigene Klasse `PollingEngine` in `src/polling/pollingEngine.js`                                           |
+| Polling-Strategie     | Sequenziell -- eine Quelle nach der anderen                                                               |
+| Aenderungsverhalten   | Vollautomatik -- sofort importieren bei Pruefsummen-Aenderung                                             |
+| Intervall             | Konfigurierbar via Dropdown (15 Min, 30 Min, 1 Stunde, 2 Stunden, 6 Stunden), Standard: 60 Min            |
+| Fehlerbehandlung      | Nach 5 aufeinanderfolgenden Fehlern wird die Quelle automatisch deaktiviert                               |
+| Status-Daten          | Standard: Zeitstempel (lastChecked, lastChanged) + Fehlerinfo (lastError, lastErrorAt, consecutiveErrors) |
+| Status-Persistierung  | Eigene Datei `polling-status.json` (Config + Status + Log)                                                |
+| Geloeschte Dateien    | Zeitplan als "Quelle nicht verfuegbar" markieren                                                          |
+| UI-Platzierung        | In bestehende Dateiquellen-Ansicht integriert                                                             |
+| "Jetzt pruefen"-Scope | Pro Quelle ein Button + ein globaler Button                                                               |
+| REST API              | 4 Endpunkte: status, trigger, config, log                                                                 |
+| Auto-Start            | Automatisch wenn mindestens eine Quelle aktiviert ist                                                     |
+| Polling-Log           | Ringpuffer mit 50 Eintraegen, nur signifikante Events (Aenderung, Import, Fehler)                         |
+| Timer-Reset           | Manueller Poll setzt den automatischen Timer zurueck                                                      |
 
 ## 3. Implementierung
 
@@ -32,17 +32,21 @@ Ein robuster zentraler Polling-Mechanismus der alle konfigurierten Dateiquellen 
 Zentrale Klasse die den periodischen Polling-Zyklus steuert:
 
 ```javascript
-import { Logger } from '../utils/logger.js';
+import { Logger } from "../utils/logger.js";
 
 export class PollingEngine {
-  constructor(fileSourceManager, scheduleManager, statusFilePath = 'polling-status.json') {
+  constructor(
+    fileSourceManager,
+    scheduleManager,
+    statusFilePath = "polling-status.json",
+  ) {
     this.fileSourceManager = fileSourceManager;
     this.scheduleManager = scheduleManager;
     this.statusFilePath = statusFilePath;
     this.timer = null;
-    this.isRunning = false;  // true waehrend eines Poll-Zyklus laeuft
-    this.status = null;      // geladen aus polling-status.json
-    this.logger = new Logger('PollingEngine');
+    this.isRunning = false; // true waehrend eines Poll-Zyklus laeuft
+    this.status = null; // geladen aus polling-status.json
+    this.logger = new Logger("PollingEngine");
   }
 }
 ```
@@ -75,7 +79,11 @@ export class PollingEngine {
       "type": "change",
       "source": "usb",
       "message": "Datei 'Heizplan.xlsx' geaendert, Import durchgefuehrt.",
-      "details": { "fileName": "Heizplan.xlsx", "action": "updated", "scheduleId": "abc-123" }
+      "details": {
+        "fileName": "Heizplan.xlsx",
+        "action": "updated",
+        "scheduleId": "abc-123"
+      }
     },
     {
       "timestamp": "2026-03-22T13:00:00.000Z",
@@ -90,13 +98,13 @@ export class PollingEngine {
 
 **Log-Eintragstypen:**
 
-| type | Wann geloggt |
-|---|---|
-| `change` | Datei-Aenderung erkannt und importiert |
-| `import` | Neue Datei erstmals importiert |
-| `error` | Fehler beim Scannen oder Importieren |
-| `disabled` | Quelle nach 5 Fehlern automatisch deaktiviert |
-| `source_missing` | Zuvor vorhandene Datei nicht mehr gefunden |
+| type             | Wann geloggt                                  |
+| ---------------- | --------------------------------------------- |
+| `change`         | Datei-Aenderung erkannt und importiert        |
+| `import`         | Neue Datei erstmals importiert                |
+| `error`          | Fehler beim Scannen oder Importieren          |
+| `disabled`       | Quelle nach 5 Fehlern automatisch deaktiviert |
+| `source_missing` | Zuvor vorhandene Datei nicht mehr gefunden    |
 
 **`loadStatus()`:**
 
@@ -152,9 +160,9 @@ Prueft eine einzelne Quelle auf Aenderungen:
    c. `sources[type].lastErrorAt = new Date().toISOString()`
    d. Log-Eintrag: `{ type: "error", source, message, details }`
    e. Wenn `consecutiveErrors >= 5`:
-      - Quelle deaktivieren: `fileSourceManager.updateSourceConfig(type, { enabled: false })`
-      - Log-Eintrag: `{ type: "disabled", source, message: "Quelle nach 5 Fehlern deaktiviert." }`
-   f. Return
+   - Quelle deaktivieren: `fileSourceManager.updateSourceConfig(type, { enabled: false })`
+   - Log-Eintrag: `{ type: "disabled", source, message: "Quelle nach 5 Fehlern deaktiviert." }`
+     f. Return
 3. Bei Erfolg:
    a. `sources[type].consecutiveErrors = 0`
    b. `sources[type].lastError = null`
@@ -242,6 +250,7 @@ Zeitplan bleibt aktiv, aber die UI zeigt eine Warnung an. Wenn die Datei spaeter
 Aktueller Polling-Status.
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -268,6 +277,7 @@ Aktueller Polling-Status.
 Manueller Poll-Trigger ("Jetzt pruefen").
 
 **Request Body (optional):**
+
 ```json
 { "type": "usb" }
 ```
@@ -275,6 +285,7 @@ Manueller Poll-Trigger ("Jetzt pruefen").
 Wenn `type` angegeben: Nur diese Quelle pruefen. Ohne `type`: Alle aktivierten Quellen.
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -293,6 +304,7 @@ Wenn `type` angegeben: Nur diese Quelle pruefen. Ohne `type`: Alle aktivierten Q
 Polling-Konfiguration aendern.
 
 **Request Body:**
+
 ```json
 {
   "enabled": true,
@@ -301,10 +313,12 @@ Polling-Konfiguration aendern.
 ```
 
 **Validierung:**
+
 - `intervalMinutes` muss einer der erlaubten Werte sein: 15, 30, 60, 120, 360
 - `enabled` muss boolean sein
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -318,9 +332,11 @@ Polling-Konfiguration aendern.
 Letzte Polling-Ereignisse.
 
 **Query-Parameter:**
+
 - `limit` (optional, Standard: 50, Max: 50)
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -330,7 +346,11 @@ Letzte Polling-Ereignisse.
       "type": "change",
       "source": "usb",
       "message": "Datei 'Heizplan.xlsx' geaendert, Import durchgefuehrt.",
-      "details": { "fileName": "Heizplan.xlsx", "action": "updated", "scheduleId": "abc-123" }
+      "details": {
+        "fileName": "Heizplan.xlsx",
+        "action": "updated",
+        "scheduleId": "abc-123"
+      }
     }
   ]
 }
@@ -355,6 +375,7 @@ Letzte Polling-Ereignisse.
 ```
 
 **Verhalten:**
+
 - Checkbox "Aktiviert" ruft `PUT /api/polling/config` auf
 - Dropdown "Intervall" mit Optionen: 15 Minuten, 30 Minuten, 1 Stunde, 2 Stunden, 6 Stunden
 - "Naechste Pruefung" wird aus `GET /api/polling/status` gelesen
@@ -382,12 +403,14 @@ Jede Quellen-Karte (USB, FRITZ!Box) wird um Polling-Status erweitert:
 ```
 
 **Status-Anzeige:**
+
 - **OK**: Gruener Text, keine Fehler
 - **Fehler (N/5)**: Oranger Text mit Fehlermeldung, z.B. "USB-Laufwerk nicht gefunden (Fehler 2/5)"
 - **Deaktiviert (Fehler)**: Roter Text, "Nach 5 Fehlern automatisch deaktiviert. [Reaktivieren]"
 - **Quelle nicht verfuegbar**: Gelber Hinweis bei Zeitplaenen deren Quelldatei fehlt
 
 **"Jetzt pruefen"-Button pro Quelle:**
+
 - Ruft `POST /api/polling/trigger` mit `{ "type": "usb" }` auf
 - Waehrend des Pruefens: disabled + Spinner
 - Nach Abschluss: Status aktualisieren
@@ -410,6 +433,7 @@ Neuer ausklappbarer Bereich unterhalb der Polling-Steuerung:
 ```
 
 **Verhalten:**
+
 - Standardmaessig zugeklappt
 - Laedt Daten von `GET /api/polling/log`
 - Farbkodierung: Gruen fuer Imports/Changes, Rot fuer Errors, Orange fuer Warnungen
@@ -422,7 +446,7 @@ Neuer ausklappbarer Bereich unterhalb der Polling-Steuerung:
 Initialisierung der PollingEngine:
 
 ```javascript
-import { PollingEngine } from './src/polling/pollingEngine.js';
+import { PollingEngine } from "./src/polling/pollingEngine.js";
 
 // Nach FileSourceManager und ScheduleManager Initialisierung:
 const pollingEngine = new PollingEngine(fileSourceManager, scheduleManager);
@@ -430,6 +454,7 @@ pollingEngine.start();
 ```
 
 Neue Endpunkte registrieren:
+
 - `GET /api/polling/status` → `pollingEngine.getStatus()`
 - `POST /api/polling/trigger` → `pollingEngine.triggerPoll(req.body.type)`
 - `PUT /api/polling/config` → `pollingEngine.updateConfig(req.body)`
@@ -493,12 +518,14 @@ Keine Aenderungen noetig -- PollingEngine nutzt die bestehenden Methoden von Fil
 ## 5. Abhaengigkeiten
 
 **Keine neuen npm-Pakete.** Die PollingEngine nutzt ausschliesslich bestehende Module:
+
 - `FileSourceManager` (scanSource, importFile, updateSourceConfig, getAllSources)
 - `ScheduleManager` (findScheduleBySource, updateSchedule)
 - `Logger` (Logging-Utility)
 - `fs/promises` (polling-status.json lesen/schreiben)
 
 **Voraussetzungen:**
+
 - Epic 4 (USB-Dateiquelle, FileSourceManager) muss abgeschlossen sein
 - Epic 5 (FRITZ!Box NAS) muss abgeschlossen sein (damit es Quellen zum Pollen gibt)
 

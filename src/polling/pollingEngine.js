@@ -36,15 +36,11 @@ export class PollingEngine {
   loadStatus() {
     try {
       if (fs.existsSync(this.statusFilePath)) {
-        const data = JSON.parse(
-          fs.readFileSync(this.statusFilePath, "utf8"),
-        );
+        const data = JSON.parse(fs.readFileSync(this.statusFilePath, "utf8"));
         return { ...JSON.parse(JSON.stringify(DEFAULT_STATUS)), ...data };
       }
     } catch (error) {
-      logger.warn(
-        `Fehler beim Laden des Polling-Status: ${error.message}`,
-      );
+      logger.warn(`Fehler beim Laden des Polling-Status: ${error.message}`);
     }
     return JSON.parse(JSON.stringify(DEFAULT_STATUS));
   }
@@ -123,9 +119,7 @@ export class PollingEngine {
         try {
           await this.pollSource(type);
         } catch (error) {
-          logger.error(
-            `Polling-Fehler fuer '${type}': ${error.message}`,
-          );
+          logger.error(`Polling-Fehler fuer '${type}': ${error.message}`);
         }
       }
     } finally {
@@ -290,7 +284,9 @@ export class PollingEngine {
     this.restart();
 
     return {
-      sourcesChecked: type ? [type] : [...this.fileSourceManager.sources.keys()],
+      sourcesChecked: type
+        ? [type]
+        : [...this.fileSourceManager.sources.keys()],
       changes,
     };
   }

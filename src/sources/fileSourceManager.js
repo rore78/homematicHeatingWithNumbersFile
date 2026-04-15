@@ -81,11 +81,7 @@ export class FileSourceManager {
     if (saved && fileSource.updateConfig) {
       const updates = {};
       for (const [key, value] of Object.entries(saved)) {
-        if (
-          key === "enabled" ||
-          key === "lastChecked" ||
-          key === "files"
-        )
+        if (key === "enabled" || key === "lastChecked" || key === "files")
           continue;
         if (value !== "" && value !== null && value !== undefined) {
           updates[key] = value;
@@ -146,7 +142,10 @@ export class FileSourceManager {
     }
 
     // Passwort-Handling fuer FRITZ!Box und iCloud
-    if ((type === "fritzbox" || type === "icloud") && newConfig.password !== undefined) {
+    if (
+      (type === "fritzbox" || type === "icloud") &&
+      newConfig.password !== undefined
+    ) {
       if (newConfig.password === "********") {
         // Bestehendes Passwort beibehalten
         delete newConfig.password;
@@ -197,9 +196,7 @@ export class FileSourceManager {
     if (!available) {
       const cfg = source.getConfig();
       const target = cfg.mountPoint || cfg.host || type;
-      throw new Error(
-        `Dateiquelle '${type}' nicht verfuegbar (${target}).`,
-      );
+      throw new Error(`Dateiquelle '${type}' nicht verfuegbar (${target}).`);
     }
 
     const files = await source.listFiles();
@@ -283,11 +280,7 @@ export class FileSourceManager {
       let action;
 
       if (existing) {
-        schedule = scheduleManager.updateSchedule(
-          existing.id,
-          data,
-          sourceObj,
-        );
+        schedule = scheduleManager.updateSchedule(existing.id, data, sourceObj);
         action = "updated";
       } else {
         schedule = scheduleManager.createSchedule(

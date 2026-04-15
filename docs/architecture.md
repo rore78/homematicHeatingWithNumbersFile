@@ -320,14 +320,14 @@ classDiagram
 
 The addon uses a file-based persistence model with no database:
 
-| Data                   | Storage                  | Format                               |
-| ---------------------- | ------------------------ | ------------------------------------ |
-| Heating schedules      | `schedules/{uuid}.json`  | One JSON file per schedule           |
-| Area definitions       | `areas.json`             | Single JSON file, keyed by area name |
-| Source configuration   | `sources.json`           | All file source configs              |
-| Push configuration     | `push-config.json`       | Push endpoint config + API key       |
-| Polling status         | `polling-status.json`    | Polling engine state + log           |
-| Uploaded files         | `uploads/`               | Temporary -- deleted after parsing   |
+| Data                 | Storage                 | Format                               |
+| -------------------- | ----------------------- | ------------------------------------ |
+| Heating schedules    | `schedules/{uuid}.json` | One JSON file per schedule           |
+| Area definitions     | `areas.json`            | Single JSON file, keyed by area name |
+| Source configuration | `sources.json`          | All file source configs              |
+| Push configuration   | `push-config.json`      | Push endpoint config + API key       |
+| Polling status       | `polling-status.json`   | Polling engine state + log           |
+| Uploaded files       | `uploads/`              | Temporary -- deleted after parsing   |
 
 ## Directory Structure
 

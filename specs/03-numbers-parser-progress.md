@@ -2,13 +2,13 @@
 
 ## Team (Star Trek TNG)
 
-| Crew Member | Aufgabe | Status |
-|-------------|---------|--------|
-| Picard | SpreadsheetParser erstellen | Erledigt |
-| Riker | Alte Parser entfernen, Imports aktualisieren | Erledigt |
-| Troi | .numbers-Parsing testen, xlsx-Version pruefen | Erledigt |
-| LaForge | Tests migrieren und erweitern | Erledigt |
-| Data | Verifikation und Progress-Datei | Erledigt |
+| Crew Member | Aufgabe                                       | Status   |
+| ----------- | --------------------------------------------- | -------- |
+| Picard      | SpreadsheetParser erstellen                   | Erledigt |
+| Riker       | Alte Parser entfernen, Imports aktualisieren  | Erledigt |
+| Troi        | .numbers-Parsing testen, xlsx-Version pruefen | Erledigt |
+| LaForge     | Tests migrieren und erweitern                 | Erledigt |
+| Data        | Verifikation und Progress-Datei               | Erledigt |
 
 ## Steps
 
@@ -25,15 +25,15 @@
 
 ## Geaenderte/Neue Dateien
 
-| Datei | Aenderung |
-|-------|-----------|
-| `src/parser/spreadsheetParser.js` | **Neu:** Vereinter Parser fuer .xlsx und .numbers |
-| `src/parser/excelParser.js` | **Entfernt** |
-| `src/parser/numbersParser.js` | **Entfernt** |
-| `server.js` | Import auf SpreadsheetParser, Upload-Route vereinfacht |
-| `tests/unit/spreadsheetParser.test.js` | **Neu:** 38 Tests (migriert + erweitert) |
-| `tests/unit/excelParser.test.js` | **Entfernt** |
-| `tests/integration/api.test.js` | Import auf SpreadsheetParser |
+| Datei                                  | Aenderung                                              |
+| -------------------------------------- | ------------------------------------------------------ |
+| `src/parser/spreadsheetParser.js`      | **Neu:** Vereinter Parser fuer .xlsx und .numbers      |
+| `src/parser/excelParser.js`            | **Entfernt**                                           |
+| `src/parser/numbersParser.js`          | **Entfernt**                                           |
+| `server.js`                            | Import auf SpreadsheetParser, Upload-Route vereinfacht |
+| `tests/unit/spreadsheetParser.test.js` | **Neu:** 38 Tests (migriert + erweitert)               |
+| `tests/unit/excelParser.test.js`       | **Entfernt**                                           |
+| `tests/integration/api.test.js`        | Import auf SpreadsheetParser                           |
 
 ## Wichtige Erkenntnisse
 

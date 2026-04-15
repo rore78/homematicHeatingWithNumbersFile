@@ -8,11 +8,7 @@ import logger from "../utils/logger.js";
 
 const execFileAsync = promisify(execFile);
 
-const BRIDGE_SCRIPT = path.join(
-  process.cwd(),
-  "scripts",
-  "icloud_bridge.py",
-);
+const BRIDGE_SCRIPT = path.join(process.cwd(), "scripts", "icloud_bridge.py");
 
 /**
  * iCloud Drive Dateiquelle via Python-Bridge (pyicloud).
@@ -24,7 +20,8 @@ export class IcloudFileSource extends FileSource {
     this.appleId = config.appleId || "";
     this.password = config.password || ""; // Base64-kodiert
     this.path = config.path || "/";
-    this.sessionDir = config.sessionDir || path.join(process.cwd(), "icloud-session");
+    this.sessionDir =
+      config.sessionDir || path.join(process.cwd(), "icloud-session");
     this.pythonAvailable = null;
     this.sessionValid = null;
     this.authState = "unknown";

@@ -13,6 +13,7 @@ npm test
 ```
 
 **Erwartetes Ergebnis:**
+
 - 6 Testdateien bestehen
 - 89 Tests bestehen
 - Keine Fehler
@@ -24,6 +25,7 @@ npm run lint
 ```
 
 **Erwartetes Ergebnis:**
+
 - Keine Fehler (0 errors)
 - Warnungen sind akzeptabel
 
@@ -34,6 +36,7 @@ npm run format:check
 ```
 
 **Erwartetes Ergebnis:**
+
 - "All matched files use Prettier code style!"
 
 ## Test 4: npm run test:coverage -- Coverage-Ziele erreicht
@@ -43,6 +46,7 @@ npm run test:coverage
 ```
 
 **Erwartetes Ergebnis:**
+
 - ExcelParser: >= 80% Statements
 - ScheduleManager: >= 80% Statements
 - HeatingProfile: >= 80% Statements
@@ -58,6 +62,7 @@ npm run test:coverage
 5. Pruefen: Daten werden in der Vorschau-Tabelle angezeigt
 
 **Erwartetes Ergebnis:**
+
 - Seite laedt, Upload funktioniert, geparste Daten werden angezeigt
 
 ## Test 6: Web-UI Fehlerbehandlung
@@ -66,6 +71,7 @@ npm run test:coverage
 2. Versuchen eine .txt Datei hochzuladen
 
 **Erwartetes Ergebnis:**
+
 - Fehlermeldung wird angezeigt (nur Excel/Numbers erlaubt)
 
 ## Test 7: Vitest Watch-Modus
@@ -79,6 +85,7 @@ npm run test:watch
 3. Pruefen: Tests werden automatisch erneut ausgefuehrt
 
 **Erwartetes Ergebnis:**
+
 - Watch-Modus erkennt Aenderungen und fuehrt Tests erneut aus
 
 ## Test 8: ESLint Fix-Modus
@@ -88,6 +95,7 @@ npm run lint:fix
 ```
 
 **Erwartetes Ergebnis:**
+
 - Keine Aenderungen (Code ist bereits sauber) oder automatische Korrekturen
 
 ## Test 9: Prettier Format-Modus
@@ -97,18 +105,19 @@ npm run format
 ```
 
 **Erwartetes Ergebnis:**
+
 - Alle Dateien sind formatiert, keine Aenderungen noetig
 
 ## Zusammenfassung
 
-| Test | Beschreibung | Typ |
-|------|-------------|-----|
-| 1 | npm test | Automatisch |
-| 2 | npm run lint | Automatisch |
-| 3 | npm run format:check | Automatisch |
-| 4 | npm run test:coverage | Automatisch |
-| 5 | Web-UI Upload | Manuell/Browser |
-| 6 | Web-UI Fehlerbehandlung | Manuell/Browser |
-| 7 | Vitest Watch-Modus | Manuell/Terminal |
-| 8 | ESLint Fix | Automatisch |
-| 9 | Prettier Format | Automatisch |
+| Test | Beschreibung            | Typ              |
+| ---- | ----------------------- | ---------------- |
+| 1    | npm test                | Automatisch      |
+| 2    | npm run lint            | Automatisch      |
+| 3    | npm run format:check    | Automatisch      |
+| 4    | npm run test:coverage   | Automatisch      |
+| 5    | Web-UI Upload           | Manuell/Browser  |
+| 6    | Web-UI Fehlerbehandlung | Manuell/Browser  |
+| 7    | Vitest Watch-Modus      | Manuell/Terminal |
+| 8    | ESLint Fix              | Automatisch      |
+| 9    | Prettier Format         | Automatisch      |

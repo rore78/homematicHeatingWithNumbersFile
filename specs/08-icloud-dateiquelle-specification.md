@@ -8,23 +8,23 @@ Zugriff auf Tabellendateien (.numbers, .xlsx) in iCloud Drive ueber eine Python-
 
 ## 2. Entscheidungen aus dem Brainstorming
 
-| Thema | Entscheidung |
-|---|---|
-| Primaer-Ansatz | iCloud Web-Session via pyicloud (Python-Bridge) |
-| Fallback | Generischer Push-Endpunkt (HTTP POST mit API-Key) |
-| Bibliothek | pyicloud via child_process (Python-Bridge mit Session-Cache) |
-| Python-Bridge-Architektur | Ein Script pro Aktion mit persistentem Session-Verzeichnis |
-| Bridge-Operationen | 5 Aktionen: login, verify-2fa, list, download, status |
-| 2FA-Handling | Einmaliger Setup-Flow in der Web-UI |
-| Session-Speicherung | Eigene Datei `icloud-session.json` + pyicloud Session-Verzeichnis |
-| Token-Ablauf | Automatisch erkennen + UI-Warnung "Re-Auth noetig" |
-| Python-Abhaengigkeit | Optional mit graceful degradation (Addon funktioniert ohne Python) |
-| Push-Endpunkt | Eigenstaendiger Import-Endpunkt (kein FileSource) |
-| Push-Authentifizierung | API-Key als Bearer Token, automatisch generiert |
-| Push-Verhalten | Sofort parsen und importieren |
-| UI-Layout | Multi-Schritt-Wizard innerhalb der Quellen-Karte |
-| API-Key-Verwaltung | Automatisch generiert, anzeigbar + Copy-Button + Regenerieren |
-| Kurzbefehl-Hilfe | Schritt-fuer-Schritt-Anleitung in der UI |
+| Thema                     | Entscheidung                                                       |
+| ------------------------- | ------------------------------------------------------------------ |
+| Primaer-Ansatz            | iCloud Web-Session via pyicloud (Python-Bridge)                    |
+| Fallback                  | Generischer Push-Endpunkt (HTTP POST mit API-Key)                  |
+| Bibliothek                | pyicloud via child_process (Python-Bridge mit Session-Cache)       |
+| Python-Bridge-Architektur | Ein Script pro Aktion mit persistentem Session-Verzeichnis         |
+| Bridge-Operationen        | 5 Aktionen: login, verify-2fa, list, download, status              |
+| 2FA-Handling              | Einmaliger Setup-Flow in der Web-UI                                |
+| Session-Speicherung       | Eigene Datei `icloud-session.json` + pyicloud Session-Verzeichnis  |
+| Token-Ablauf              | Automatisch erkennen + UI-Warnung "Re-Auth noetig"                 |
+| Python-Abhaengigkeit      | Optional mit graceful degradation (Addon funktioniert ohne Python) |
+| Push-Endpunkt             | Eigenstaendiger Import-Endpunkt (kein FileSource)                  |
+| Push-Authentifizierung    | API-Key als Bearer Token, automatisch generiert                    |
+| Push-Verhalten            | Sofort parsen und importieren                                      |
+| UI-Layout                 | Multi-Schritt-Wizard innerhalb der Quellen-Karte                   |
+| API-Key-Verwaltung        | Automatisch generiert, anzeigbar + Copy-Button + Regenerieren      |
+| Kurzbefehl-Hilfe          | Schritt-fuer-Schritt-Anleitung in der UI                           |
 
 ## 3. Implementierung
 
@@ -35,9 +35,9 @@ Zugriff auf Tabellendateien (.numbers, .xlsx) in iCloud Drive ueber eine Python-
 Implementiert `FileSource` fuer iCloud Drive. Delegiert alle iCloud-Operationen an das Python-Bridge-Script.
 
 ```javascript
-import { FileSource } from './fileSource.js';
-import { execFile } from 'child_process';
-import { promisify } from 'util';
+import { FileSource } from "./fileSource.js";
+import { execFile } from "child_process";
+import { promisify } from "util";
 
 export class IcloudFileSource extends FileSource {
   constructor(config = {}) {
@@ -48,21 +48,21 @@ export class IcloudFileSource extends FileSource {
 
 **Konstruktor-Parameter:**
 
-| Feld | Typ | Beschreibung |
-|---|---|---|
-| `appleId` | string | Apple-ID E-Mail-Adresse |
-| `password` | string | Base64-kodiertes Passwort |
-| `path` | string | Pfad im iCloud Drive (z.B. `/Heizung`) |
+| Feld         | Typ    | Beschreibung                                                          |
+| ------------ | ------ | --------------------------------------------------------------------- |
+| `appleId`    | string | Apple-ID E-Mail-Adresse                                               |
+| `password`   | string | Base64-kodiertes Passwort                                             |
+| `path`       | string | Pfad im iCloud Drive (z.B. `/Heizung`)                                |
 | `sessionDir` | string | Verzeichnis fuer pyicloud Session-Cache (Standard: `icloud-session/`) |
 
 **Interner Zustand:**
 
 ```javascript
-this.pythonAvailable = null;  // null = nicht geprueft, true/false
-this.sessionValid = null;     // null = nicht geprueft, true/false
-this.authState = 'unknown';   // 'unknown' | 'not_configured' | 'python_missing' |
-                               // 'login_required' | '2fa_required' | 'authenticated' |
-                               // 'reauth_required'
+this.pythonAvailable = null; // null = nicht geprueft, true/false
+this.sessionValid = null; // null = nicht geprueft, true/false
+this.authState = "unknown"; // 'unknown' | 'not_configured' | 'python_missing' |
+// 'login_required' | '2fa_required' | 'authenticated' |
+// 'reauth_required'
 ```
 
 **`_checkPython()`:**
@@ -283,9 +283,10 @@ Der Push-Endpunkt ist unabhaengig von der iCloud-Quelle. Er akzeptiert Dateien p
 ```
 
 API-Key wird beim ersten Aktivieren generiert:
+
 ```javascript
-import crypto from 'crypto';
-const apiKey = crypto.randomBytes(32).toString('hex');
+import crypto from "crypto";
+const apiKey = crypto.randomBytes(32).toString("hex");
 ```
 
 #### `POST /api/push/upload`
@@ -293,6 +294,7 @@ const apiKey = crypto.randomBytes(32).toString('hex');
 Empfaengt eine Datei und importiert sie sofort.
 
 **Authentifizierung:**
+
 ```
 Authorization: Bearer <API-Key>
 ```
@@ -314,6 +316,7 @@ Authorization: Bearer <API-Key>
 11. `push-config.json` aktualisieren (lastUpload, lastUploadFile)
 
 **Response (Erfolg):**
+
 ```json
 {
   "success": true,
@@ -327,6 +330,7 @@ Authorization: Bearer <API-Key>
 ```
 
 **Response (Fehler):**
+
 ```json
 {
   "success": false,
@@ -339,6 +343,7 @@ Authorization: Bearer <API-Key>
 Push-Endpunkt-Konfiguration abfragen.
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -357,6 +362,7 @@ Push-Endpunkt-Konfiguration abfragen.
 Push-Endpunkt konfigurieren.
 
 **Request Body:**
+
 ```json
 { "enabled": true }
 ```
@@ -364,6 +370,7 @@ Push-Endpunkt konfigurieren.
 Beim Aktivieren wird automatisch ein API-Key generiert falls noch keiner existiert.
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -377,6 +384,7 @@ Beim Aktivieren wird automatisch ein API-Key generiert falls noch keiner existie
 Neuen API-Key generieren (invalidiert den alten).
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -394,6 +402,7 @@ Zusaetzlich zu den bestehenden `/api/sources/:type/*` Endpunkten braucht iCloud 
 Startet den Login-Prozess.
 
 **Request Body:**
+
 ```json
 {
   "appleId": "user@icloud.com",
@@ -402,14 +411,19 @@ Startet den Login-Prozess.
 ```
 
 **Response (2FA noetig):**
+
 ```json
 {
   "success": true,
-  "data": { "status": "2fa_required", "message": "Bestaetigungscode wurde an Ihre Apple-Geraete gesendet." }
+  "data": {
+    "status": "2fa_required",
+    "message": "Bestaetigungscode wurde an Ihre Apple-Geraete gesendet."
+  }
 }
 ```
 
 **Response (Erfolg ohne 2FA):**
+
 ```json
 {
   "success": true,
@@ -422,11 +436,13 @@ Startet den Login-Prozess.
 Verifiziert den 2FA-Code.
 
 **Request Body:**
+
 ```json
 { "code": "123456" }
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -439,6 +455,7 @@ Verifiziert den 2FA-Code.
 Aktueller Authentifizierungszustand fuer die UI.
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -452,6 +469,7 @@ Aktueller Authentifizierungszustand fuer die UI.
 ```
 
 Moegliche `authState`-Werte:
+
 - `python_missing` -- Python 3 oder pyicloud nicht installiert
 - `not_configured` -- Keine Apple-ID hinterlegt
 - `login_required` -- Noch nicht angemeldet
@@ -464,6 +482,7 @@ Moegliche `authState`-Werte:
 Abmelden und Session loeschen.
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -490,14 +509,14 @@ Abmelden und Session loeschen.
 
 **Felder (iCloud-spezifisch):**
 
-| Feld | Typ | Beschreibung |
-|---|---|---|
-| `enabled` | boolean | Ob die Quelle aktiv ist |
-| `appleId` | string | Apple-ID E-Mail |
-| `password` | string | Base64-kodiertes Passwort |
-| `path` | string | Pfad im iCloud Drive |
-| `lastChecked` | string\|null | Letzter Scan-Zeitstempel |
-| `files` | object | Zuletzt gesehene Dateien mit Pruefsummen |
+| Feld          | Typ          | Beschreibung                             |
+| ------------- | ------------ | ---------------------------------------- |
+| `enabled`     | boolean      | Ob die Quelle aktiv ist                  |
+| `appleId`     | string       | Apple-ID E-Mail                          |
+| `password`    | string       | Base64-kodiertes Passwort                |
+| `path`        | string       | Pfad im iCloud Drive                     |
+| `lastChecked` | string\|null | Letzter Scan-Zeitstempel                 |
+| `files`       | object       | Zuletzt gesehene Dateien mit Pruefsummen |
 
 ### 3.7 FileSourceManager-Anpassungen
 
@@ -514,7 +533,7 @@ Abmelden und Session loeschen.
 **Datei:** `server.js`
 
 ```javascript
-import { IcloudFileSource } from './src/sources/icloudFileSource.js';
+import { IcloudFileSource } from "./src/sources/icloudFileSource.js";
 
 // Registrierung
 const icloudSource = new IcloudFileSource();
@@ -549,6 +568,7 @@ fileSourceManager.registerSource(icloudSource);
 Unterhalb der FRITZ!Box-Karte. Zeigt je nach `authState` den passenden Zustand:
 
 **Zustand `python_missing`:**
+
 ```
 ┌─────────────────────────────────────────────────────────┐
 │ iCloud Drive (Experimentell)                             │
@@ -566,6 +586,7 @@ Unterhalb der FRITZ!Box-Karte. Zeigt je nach `authState` den passenden Zustand:
 ```
 
 **Zustand `not_configured` / `login_required`:**
+
 ```
 ┌─────────────────────────────────────────────────────────┐
 │ iCloud Drive (Experimentell)              [Aktiviert: O] │
@@ -583,6 +604,7 @@ Unterhalb der FRITZ!Box-Karte. Zeigt je nach `authState` den passenden Zustand:
 ```
 
 **Zustand `2fa_required`:**
+
 ```
 ┌─────────────────────────────────────────────────────────┐
 │ iCloud Drive (Experimentell)                             │
@@ -597,6 +619,7 @@ Unterhalb der FRITZ!Box-Karte. Zeigt je nach `authState` den passenden Zustand:
 ```
 
 **Zustand `authenticated`:**
+
 ```
 ┌─────────────────────────────────────────────────────────┐
 │ iCloud Drive (Experimentell)              [Aktiviert: x] │
@@ -615,6 +638,7 @@ Unterhalb der FRITZ!Box-Karte. Zeigt je nach `authState` den passenden Zustand:
 ```
 
 **Zustand `reauth_required`:**
+
 ```
 ┌─────────────────────────────────────────────────────────┐
 │ iCloud Drive (Experimentell)              [Aktiviert: x] │
@@ -664,6 +688,7 @@ Unterhalb der iCloud-Karte:
 ```
 
 **Verhalten:**
+
 - "Kopieren" kopiert den API-Key in die Zwischenablage
 - "Neuen Key generieren" zeigt Bestaetigung ("Bisheriger Key wird ungueltig. Fortfahren?")
 - `[CCU-IP]` wird dynamisch durch die aktuelle Server-Adresse ersetzt
@@ -679,12 +704,12 @@ Python-Bridge wird gemockt (child_process.execFile wird gestubt):
 
 1. **getType** -- gibt 'icloud' zurueck
 2. **getConfig** -- gibt Config ohne Passwort zurueck
-3. **_checkPython** -- erkennt verfuegbares Python 3 + pyicloud
-4. **_checkPython** -- erkennt fehlendes Python (authState = python_missing)
-5. **_checkPython** -- erkennt fehlendes pyicloud (authState = python_missing)
-6. **_execBridge** -- ruft Python-Script mit korrekten Argumenten auf
-7. **_execBridge** -- parsed JSON-Ausgabe korrekt
-8. **_execBridge** -- Timeout nach 30 Sekunden
+3. **\_checkPython** -- erkennt verfuegbares Python 3 + pyicloud
+4. **\_checkPython** -- erkennt fehlendes Python (authState = python_missing)
+5. **\_checkPython** -- erkennt fehlendes pyicloud (authState = python_missing)
+6. **\_execBridge** -- ruft Python-Script mit korrekten Argumenten auf
+7. **\_execBridge** -- parsed JSON-Ausgabe korrekt
+8. **\_execBridge** -- Timeout nach 30 Sekunden
 9. **isAvailable** -- true bei authenticated Session
 10. **isAvailable** -- false bei fehlendem Python
 11. **isAvailable** -- false bei abgelaufener Session
@@ -759,10 +784,12 @@ Python-Bridge wird gemockt (child_process.execFile wird gestubt):
 **Neue npm-Pakete:** Keine (nutzt bestehende: multer, crypto, child_process)
 
 **Python-Abhaengigkeiten (optional, nur fuer iCloud):**
+
 - Python 3.x
 - `pyicloud` (pip3)
 
 **Voraussetzungen:**
+
 - Epic 4 (FileSourceManager, FileSource-Interface)
 - Epic 5 (FRITZ!Box -- fuer Passwort-Encoding-Pattern)
 - Epic 7 (Polling Engine -- fuer automatisches Polling der iCloud-Quelle)
@@ -795,6 +822,7 @@ Geaendert:
 ## 7. Akzeptanzkriterien
 
 ### iCloud-Zugriff
+
 1. Wenn Python 3 + pyicloud installiert: iCloud-Quelle ist in der UI konfigurierbar
 2. Wenn Python fehlt: UI zeigt Installationsanleitung, restliches Addon funktioniert
 3. 2FA-Flow funktioniert: Apple-ID eingeben → Code am iPhone empfangen → Code eingeben → verbunden
@@ -805,6 +833,7 @@ Geaendert:
 8. Zugangsdaten werden Base64-kodiert gespeichert
 
 ### Push-Endpunkt
+
 9. Push-Endpunkt kann in der UI aktiviert/deaktiviert werden
 10. API-Key wird automatisch generiert und ist in der UI sichtbar + kopierbar
 11. Datei-Upload via `POST /api/push/upload` mit gueltigem Bearer Token erstellt/aktualisiert Zeitplan
@@ -812,6 +841,7 @@ Geaendert:
 13. iOS-Kurzbefehl-Anleitung ist in der UI verfuegbar
 
 ### Allgemein
+
 14. Bestehende Quellen (USB, FRITZ!Box) sind nicht beeintraechtigt
 15. `npm test` besteht mit allen neuen und bestehenden Tests
 16. Fehlermeldungen sind auf Deutsch

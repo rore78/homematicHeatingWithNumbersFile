@@ -29,6 +29,7 @@ Thermo-Flow ist ein Addon fuer die CCU3, das die zeitgesteuerte Steuerung von Ho
 - **Push-Endpunkt** -- Datei per HTTP-Request hochladen (z.B. per Shortcut/Automation)
 
 Das Addon unterstuetzt zwei Betriebsmodi fuer die Kommunikation mit den Geraeten:
+
 - **Lokal** (Standard auf CCU3): Direkte Steuerung ueber XML-RPC
 - **Cloud**: Steuerung ueber die Homematic IP Cloud API
 
@@ -64,13 +65,13 @@ tar -xzf ../my-homematic-addon-1.0.0.tar.gz
 
 Die Konfiguration liegt in `/usr/local/addons/my-homematic-addon/.env`:
 
-| Variable               | Beschreibung                    | Standard    |
-| ---------------------- | ------------------------------- | ----------- |
-| `PORT`                 | Web-UI Port                     | 8080        |
-| `LOG_LEVEL`            | Log-Detailgrad                  | info        |
-| `HOMEMATIC_MODE`       | Verbindungsmodus (local/cloud)  | local       |
-| `HOMEMATIC_CCU_HOST`   | CCU-Adresse                     | localhost   |
-| `HOMEMATIC_CCU_PORT`   | XML-RPC Port                    | 2001        |
+| Variable             | Beschreibung                   | Standard  |
+| -------------------- | ------------------------------ | --------- |
+| `PORT`               | Web-UI Port                    | 8080      |
+| `LOG_LEVEL`          | Log-Detailgrad                 | info      |
+| `HOMEMATIC_MODE`     | Verbindungsmodus (local/cloud) | local     |
+| `HOMEMATIC_CCU_HOST` | CCU-Adresse                    | localhost |
+| `HOMEMATIC_CCU_PORT` | XML-RPC Port                   | 2001      |
 
 Fuer den Cloud-Modus zusaetzlich:
 
@@ -107,6 +108,7 @@ Die Web-Oberflaeche gliedert sich in folgende Bereiche:
 ### Datei-Upload
 
 Der obere Bereich zeigt einen Drag-and-Drop-Bereich fuer Datei-Uploads. Unterstuetzte Formate:
+
 - Excel (.xlsx, .xls)
 - Apple Numbers (.numbers)
 - Maximale Dateigroesse: 10 MB
@@ -114,6 +116,7 @@ Der obere Bereich zeigt einen Drag-and-Drop-Bereich fuer Datei-Uploads. Unterstu
 ### Vorschau
 
 Nach dem Upload erscheint eine Vorschau der erkannten Daten mit:
+
 - Bereich, Start- und Enddatum
 - Steuerungsart (Temperatur oder Geraeteprofil)
 - Zusatzinformationen
@@ -162,33 +165,34 @@ Wenn in der Excel-Datei ein Bereichsname steht (z.B. "Wohnzimmer"), werden autom
 
 Erstellen Sie eine Tabelle mit folgenden Spalten:
 
-| Spalte          | Pflicht | Beschreibung                               | Beispiel                |
-| --------------- | ------- | ------------------------------------------ | ----------------------- |
-| **Bereich**     | Ja      | Bereichsname oder Geraete-IDs             | "Wohnzimmer"            |
-| **Startdatum**  | Ja      | Beginn des Zeitfensters                    | 15.01.2025 08:00        |
-| **Enddatum**    | Ja      | Ende des Zeitfensters                      | 15.01.2025 22:00        |
-| **Temperatur**  | Nein*   | Ziel-Temperatur in Grad Celsius (0-30)     | 21                      |
-| **Heizprofil**  | Nein*   | Profilname oder Geraeteprofil              | "Komfort"               |
-| **Zusatzinfo**  | Nein    | Beliebiger Kommentar                       | "Konferenzraum belegt"  |
+| Spalte         | Pflicht | Beschreibung                           | Beispiel               |
+| -------------- | ------- | -------------------------------------- | ---------------------- |
+| **Bereich**    | Ja      | Bereichsname oder Geraete-IDs          | "Wohnzimmer"           |
+| **Startdatum** | Ja      | Beginn des Zeitfensters                | 15.01.2025 08:00       |
+| **Enddatum**   | Ja      | Ende des Zeitfensters                  | 15.01.2025 22:00       |
+| **Temperatur** | Nein\*  | Ziel-Temperatur in Grad Celsius (0-30) | 21                     |
+| **Heizprofil** | Nein\*  | Profilname oder Geraeteprofil          | "Komfort"              |
+| **Zusatzinfo** | Nein    | Beliebiger Kommentar                   | "Konferenzraum belegt" |
 
-*Entweder Temperatur oder Heizprofil sollte angegeben werden.
+\*Entweder Temperatur oder Heizprofil sollte angegeben werden.
 
 ### Spaltenbezeichnungen
 
 Der Parser erkennt verschiedene Spaltenbezeichnungen automatisch:
 
-| Spalte       | Akzeptierte Namen                                          |
-| ------------ | ---------------------------------------------------------- |
-| Bereich      | Bereich, Area, Zone, Raum                                  |
-| Startdatum   | Startdatum, Start DateTime, Startzeit, Start, Von, Beginn  |
-| Enddatum     | Enddatum, End DateTime, Endzeit, End, Bis, Ende            |
-| Temperatur   | Temperatur, Temperature, Temp, C, Celsius                  |
-| Heizprofil   | Heizprofil, Profil, Profile, Heating Profile               |
-| Zusatzinfo   | Zusatzinfo, Veranstaltung, Notes, Notiz, Bemerkung, Info   |
+| Spalte     | Akzeptierte Namen                                         |
+| ---------- | --------------------------------------------------------- |
+| Bereich    | Bereich, Area, Zone, Raum                                 |
+| Startdatum | Startdatum, Start DateTime, Startzeit, Start, Von, Beginn |
+| Enddatum   | Enddatum, End DateTime, Endzeit, End, Bis, Ende           |
+| Temperatur | Temperatur, Temperature, Temp, C, Celsius                 |
+| Heizprofil | Heizprofil, Profil, Profile, Heating Profile              |
+| Zusatzinfo | Zusatzinfo, Veranstaltung, Notes, Notiz, Bemerkung, Info  |
 
 ### Datumsformate
 
 Folgende Formate werden unterstuetzt:
+
 - **Deutsch:** `DD.MM.YYYY HH:MM` (z.B. `15.01.2025 08:00`)
 - **ISO:** `YYYY-MM-DD HH:MM` (z.B. `2025-01-15 08:00`)
 - **ISO mit T:** `YYYY-MM-DDTHH:MM` (z.B. `2025-01-15T08:00`)
@@ -209,9 +213,9 @@ In der Spalte "Heizprofil" den Wert `Geraeteprofil:N` angeben (N = 1, 2 oder 3).
 
 Beispiel:
 
-| Bereich     | Startdatum       | Enddatum         | Heizprofil       |
-| ----------- | ---------------- | ---------------- | ---------------- |
-| Wohnzimmer  | 15.01.2025 08:00 | 15.01.2025 22:00 | Geraeteprofil:2  |
+| Bereich    | Startdatum       | Enddatum         | Heizprofil      |
+| ---------- | ---------------- | ---------------- | --------------- |
+| Wohnzimmer | 15.01.2025 08:00 | 15.01.2025 22:00 | Geraeteprofil:2 |
 
 ### Upload-Vorgang
 
@@ -283,6 +287,7 @@ Importiert Heizplaene von einem angeschlossenen USB-Stick.
 Importiert Heizplaene vom NAS-Speicher einer FRITZ!Box ueber FTP.
 
 **Voraussetzungen:**
+
 - FTP-Zugang auf der FRITZ!Box aktiviert (unter Heimnetz -> Speicher (NAS))
 - FTP-Benutzer eingerichtet
 
@@ -305,6 +310,7 @@ Importiert Heizplaene vom NAS-Speicher einer FRITZ!Box ueber FTP.
 Importiert Heizplaene aus iCloud Drive.
 
 **Voraussetzungen:**
+
 - Python 3 muss auf der CCU installiert sein
 - `pyicloud`-Bibliothek: `pip install pyicloud`
 
@@ -350,13 +356,13 @@ Das Polling prueft automatisch alle aktivierten Dateiquellen in regelmaessigen A
 
 Das Log zeigt Eintraege folgender Typen:
 
-| Typ             | Bedeutung                                  |
-| --------------- | ------------------------------------------ |
-| `import`        | Datei wurde erfolgreich importiert         |
-| `change`        | Aenderung erkannt, Import durchgefuehrt    |
-| `error`         | Fehler beim Zugriff auf die Quelle         |
-| `disabled`      | Quelle automatisch deaktiviert (zu viele Fehler) |
-| `source_missing`| Quelle nicht verfuegbar                    |
+| Typ              | Bedeutung                                        |
+| ---------------- | ------------------------------------------------ |
+| `import`         | Datei wurde erfolgreich importiert               |
+| `change`         | Aenderung erkannt, Import durchgefuehrt          |
+| `error`          | Fehler beim Zugriff auf die Quelle               |
+| `disabled`       | Quelle automatisch deaktiviert (zu viele Fehler) |
+| `source_missing` | Quelle nicht verfuegbar                          |
 
 ---
 
@@ -417,14 +423,14 @@ Antwort:
 }
 ```
 
-| Feld                | Beschreibung                                    |
-| ------------------- | ----------------------------------------------- |
-| `status`            | Immer "ok"                                      |
-| `uptime`            | Laufzeit in Sekunden                            |
-| `mode`              | Verbindungsmodus (local/cloud)                  |
-| `ccuVerbunden`      | CCU-Verbindung aktiv                            |
-| `aktiveZeitplaene`  | Anzahl aktiver Zeitplaene                       |
-| `ccuFehler`         | Fehlermeldung (nur bei Verbindungsproblemen)     |
+| Feld               | Beschreibung                                 |
+| ------------------ | -------------------------------------------- |
+| `status`           | Immer "ok"                                   |
+| `uptime`           | Laufzeit in Sekunden                         |
+| `mode`             | Verbindungsmodus (local/cloud)               |
+| `ccuVerbunden`     | CCU-Verbindung aktiv                         |
+| `aktiveZeitplaene` | Anzahl aktiver Zeitplaene                    |
+| `ccuFehler`        | Fehlermeldung (nur bei Verbindungsproblemen) |
 
 ---
 
@@ -448,19 +454,19 @@ curl http://[CCU-IP]:8080/api/health
 
 ### Haeufige Probleme
 
-| Problem | Loesung |
-| ------- | ------- |
-| Web-UI nicht erreichbar | Port pruefen (Standard 8080), Service-Status pruefen |
-| "Addon nicht initialisiert" | `.env`-Datei pruefen, insbesondere `HOMEMATIC_MODE` und CCU-Einstellungen |
-| Keine Geraete gefunden | CCU-Verbindung pruefen: IP-Adresse, Port 2001, XML-RPC aktiv? |
-| Zeitplan wird nicht ausgefuehrt | Ist der Zeitplan aktiviert? Liegt die aktuelle Zeit im Zeitfenster? |
-| Upload schlaegt fehl | Dateiformat pruefen (.xlsx, .xls, .numbers), Dateigroesse < 10 MB? |
-| Spalten nicht erkannt | Spaltennamen pruefen (siehe Tabelle oben), erste Zeile muss Ueberschriften enthalten |
-| FRITZ!Box Verbindung fehlgeschlagen | FTP auf FRITZ!Box aktiviert? Benutzername/Passwort korrekt? Pfad existiert? |
-| iCloud "Python nicht verfuegbar" | Python 3 und pyicloud installieren: `pip install pyicloud` |
-| iCloud 2FA-Fehler | Erneut anmelden, Code zeitnah eingeben |
-| Polling importiert nicht | Quellentyp aktiviert? Datei geaendert (neue Pruefsumme)? Polling-Log pruefen |
-| Push "Ungueltiger API-Key" | API-Key korrekt? Push-Endpunkt aktiviert? |
+| Problem                             | Loesung                                                                              |
+| ----------------------------------- | ------------------------------------------------------------------------------------ |
+| Web-UI nicht erreichbar             | Port pruefen (Standard 8080), Service-Status pruefen                                 |
+| "Addon nicht initialisiert"         | `.env`-Datei pruefen, insbesondere `HOMEMATIC_MODE` und CCU-Einstellungen            |
+| Keine Geraete gefunden              | CCU-Verbindung pruefen: IP-Adresse, Port 2001, XML-RPC aktiv?                        |
+| Zeitplan wird nicht ausgefuehrt     | Ist der Zeitplan aktiviert? Liegt die aktuelle Zeit im Zeitfenster?                  |
+| Upload schlaegt fehl                | Dateiformat pruefen (.xlsx, .xls, .numbers), Dateigroesse < 10 MB?                   |
+| Spalten nicht erkannt               | Spaltennamen pruefen (siehe Tabelle oben), erste Zeile muss Ueberschriften enthalten |
+| FRITZ!Box Verbindung fehlgeschlagen | FTP auf FRITZ!Box aktiviert? Benutzername/Passwort korrekt? Pfad existiert?          |
+| iCloud "Python nicht verfuegbar"    | Python 3 und pyicloud installieren: `pip install pyicloud`                           |
+| iCloud 2FA-Fehler                   | Erneut anmelden, Code zeitnah eingeben                                               |
+| Polling importiert nicht            | Quellentyp aktiviert? Datei geaendert (neue Pruefsumme)? Polling-Log pruefen         |
+| Push "Ungueltiger API-Key"          | API-Key korrekt? Push-Endpunkt aktiviert?                                            |
 
 ### Log-Level erhoehen
 

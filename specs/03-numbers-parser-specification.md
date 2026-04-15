@@ -6,17 +6,17 @@ Den NumbersParser-Stub durch eine funktionierende Implementierung ersetzen, die 
 
 ## 2. Entscheidungen aus dem Brainstorming
 
-| Thema | Entscheidung |
-|---|---|
-| Parsing-Ansatz | xlsx-Library (SheetJS) -- unterstuetzt .xlsx und .numbers experimentell |
-| Fehlerbehandlung | Fehler + Export-Hinweis ("Bitte exportiere als .xlsx") |
-| Kompatibilitaet | Nur einfache Tabellen (eine Tabelle pro Sheet, Text/Zahlen/Datum) |
-| Sheet-Auswahl | Immer erstes Sheet |
-| Parser-Architektur | Ein SpreadsheetParser statt zwei Klassen |
-| Dateiname | `src/parser/spreadsheetParser.js` (neu), alte Dateien entfernen |
-| xlsx-Version | Bei ^0.18.5 bleiben, nur upgraden wenn .numbers nicht funktioniert |
-| Testdatei | Programmatisch erzeugte .xlsx mit identischen Daten aus der .numbers-Datei |
-| Teststrategie | Beispieldatei + Snapshot-Vergleich |
+| Thema              | Entscheidung                                                               |
+| ------------------ | -------------------------------------------------------------------------- |
+| Parsing-Ansatz     | xlsx-Library (SheetJS) -- unterstuetzt .xlsx und .numbers experimentell    |
+| Fehlerbehandlung   | Fehler + Export-Hinweis ("Bitte exportiere als .xlsx")                     |
+| Kompatibilitaet    | Nur einfache Tabellen (eine Tabelle pro Sheet, Text/Zahlen/Datum)          |
+| Sheet-Auswahl      | Immer erstes Sheet                                                         |
+| Parser-Architektur | Ein SpreadsheetParser statt zwei Klassen                                   |
+| Dateiname          | `src/parser/spreadsheetParser.js` (neu), alte Dateien entfernen            |
+| xlsx-Version       | Bei ^0.18.5 bleiben, nur upgraden wenn .numbers nicht funktioniert         |
+| Testdatei          | Programmatisch erzeugte .xlsx mit identischen Daten aus der .numbers-Datei |
+| Teststrategie      | Beispieldatei + Snapshot-Vergleich                                         |
 
 ## 3. Implementierung
 
@@ -40,11 +40,11 @@ try {
   const workbook = XLSX.readFile(filePath);
   // ... normales Parsing
 } catch (error) {
-  if (ext === '.numbers') {
+  if (ext === ".numbers") {
     throw new Error(
-      'Die Numbers-Datei konnte nicht gelesen werden. ' +
-      'Bitte exportiere die Datei als Excel (.xlsx) in Apple Numbers ' +
-      '(Ablage > Exportieren > Excel).'
+      "Die Numbers-Datei konnte nicht gelesen werden. " +
+        "Bitte exportiere die Datei als Excel (.xlsx) in Apple Numbers " +
+        "(Ablage > Exportieren > Excel).",
     );
   }
   throw error;
@@ -59,11 +59,13 @@ try {
 ### 3.3 Import-Aktualisierungen
 
 **server.js:**
+
 - Bisherig: `import { ExcelParser } from './src/parser/excelParser.js'` + `import { NumbersParser } from './src/parser/numbersParser.js'`
 - Neu: `import { SpreadsheetParser } from './src/parser/spreadsheetParser.js'`
 - Upload-Route vereinfachen: Keine Extension-Pruefung mehr fuer Parser-Auswahl, immer `new SpreadsheetParser()` verwenden
 
 **src/index.js:**
+
 - Falls ExcelParser oder NumbersParser dort importiert werden: Import auf SpreadsheetParser umstellen
 
 ### 3.4 xlsx-Library Version
@@ -78,6 +80,7 @@ try {
 ### 4.1 Testdatei-Erzeugung
 
 Ein einmaliges Script (oder im Test-Setup) das:
+
 1. `examples/HmIP-Sondertermine.numbers` mit dem SpreadsheetParser parst
 2. Die normalisierten Daten als JSON speichert (Referenz-Snapshot)
 3. Mit `XLSX.writeFile()` eine identische .xlsx-Datei erzeugt: `examples/HmIP-Sondertermine.xlsx`

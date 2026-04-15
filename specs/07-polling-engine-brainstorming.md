@@ -5,12 +5,14 @@
 Aktuell hat das Addon **kein automatisches Polling**. Dateiquellen (USB, spaeter FRITZ!Box NAS) werden nur manuell ueber die Web-UI gescannt und importiert (POST `/api/sources/:type/scan` + `/api/sources/:type/import`). Der FileSourceManager speichert bereits Pruefsummen (MD5) pro Datei in `sources.json`, aber es gibt keinen Mechanismus der diese automatisch prueft.
 
 Das Addon hat zwei bestehende Loops:
+
 - **60-Sekunden-Loop** im ScheduleManager: Prueft ob Zeitplaene ausgefuehrt werden muessen (`checkAndExecute()`)
 - **Kein Dateiquellen-Loop**: Dateiquellen werden nur bei manueller Aktion gescannt
 
 Epic 7 fuehrt eine **zentrale Polling Engine** ein, die alle konfigurierten und aktivierten Dateiquellen periodisch prueft, Aenderungen per Pruefsummenvergleich erkennt und Zeitplaene automatisch aktualisiert.
 
 ### Bestehende Infrastruktur die genutzt werden kann:
+
 - `FileSourceManager.scanSource(type)` -- scannt eine Quelle und cached Ergebnisse
 - `FileSourceManager.importFile(type, fileName, scheduleManager)` -- importiert/aktualisiert einen Zeitplan
 - `FileSource.getChecksum(filePath)` -- MD5-Pruefsumme pro Datei

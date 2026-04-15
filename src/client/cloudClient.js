@@ -282,12 +282,7 @@ export class CloudClient {
    */
   async setHeatingProfile(deviceId, profileNumber) {
     await this.setDeviceData(deviceId, 1, "SET_POINT_MODE", 0);
-    return this.setDeviceData(
-      deviceId,
-      1,
-      "ACTIVE_PROFILE",
-      profileNumber,
-    );
+    return this.setDeviceData(deviceId, 1, "ACTIVE_PROFILE", profileNumber);
   }
 
   async getHeatingProfile(deviceId) {

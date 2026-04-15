@@ -15,6 +15,7 @@ Build a specification into working, tested, verified code.
 `$ARGUMENTS`
 
 Parse the arguments:
+
 - The spec identifier (e.g., "epic 2", "01-foundation", or a number)
 - The `--team` flag (if present, activate team mode)
 
@@ -39,7 +40,7 @@ Create `specs/{nr}-{name}-progress.md` (or update if it exists) with:
 
 - [ ] Step 1: ...
 - [ ] Step 2: ...
-...
+      ...
 
 ## Log
 ```
@@ -93,12 +94,14 @@ You are the **Team Lead**. You must NOT do any coding, research, file reading, v
 #### Setting Up the Team
 
 Decide the team structure based on the specification's complexity. You are NOT pre-assigned any structure. Analyze the spec and determine:
+
 - How many agents you need
 - What each agent's specialty should be
 - Which tasks can run in parallel vs. sequentially
 - Whether any agents need plan approval before implementing
 
 Example structures (adapt as needed):
+
 - Simple spec: 1 implementer + 1 verifier
 - Medium spec: 2-3 parallel implementers + 1 verifier
 - Complex spec: researcher + multiple implementers + dedicated test writer + verifier
@@ -126,6 +129,7 @@ For each agent you spawn:
 #### Monitoring Progress
 
 After each agent completes:
+
 1. Update the task in the task list
 2. Update `specs/{nr}-{name}-progress.md` with the result
 3. If an agent failed, analyze the failure and either:
@@ -167,6 +171,7 @@ If any check fails, fix the issue and re-verify. Loop until everything passes.
 ## Step 6: Write Test Plan
 
 Create `specs/{nr}-{name}-testplan.md` with:
+
 - Automated test scenarios (npm test, lint, format, coverage)
 - Manual/browser test scenarios for UI changes
 - Each scenario: steps, expected result, test type (automated/manual)

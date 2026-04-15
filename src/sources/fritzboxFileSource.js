@@ -109,17 +109,13 @@ export class FritzboxFileSource extends FileSource {
         )
           continue;
 
-        const filePath = this.path
-          ? `${this.path}/${entry.name}`
-          : entry.name;
+        const filePath = this.path ? `${this.path}/${entry.name}` : entry.name;
 
         files.push({
           name: entry.name,
           path: filePath,
           size: entry.size,
-          modified: entry.modifiedAt
-            ? entry.modifiedAt.toISOString()
-            : null,
+          modified: entry.modifiedAt ? entry.modifiedAt.toISOString() : null,
         });
       }
 

@@ -234,21 +234,21 @@ HOMEMATIC_MODE=auto
 # Cloud is preferred when both are available
 ```
 
-| Variable                         | Description                   | Default                          |
-| -------------------------------- | ----------------------------- | -------------------------------- |
-| `PORT`                           | Web UI port                   | 8080                             |
-| `LOG_LEVEL`                      | Log detail: debug/info/warn/error | info                         |
-| `HOMEMATIC_MODE`                 | Connection mode               | auto                             |
-| `HOMEMATIC_CCU_HOST`             | CCU address                   | 192.168.1.100                    |
-| `HOMEMATIC_CCU_PORT`             | XML-RPC port                  | 2001                             |
-| `HOMEMATIC_CCU_USERNAME`         | CCU username                  | (none)                           |
-| `HOMEMATIC_CCU_PASSWORD`         | CCU password                  | (none)                           |
-| `HOMEMATIC_CCU_USE_TLS`          | Use TLS for XML-RPC           | false                            |
-| `HOMEMATIC_IP_ACCESS_POINT_SGTIN`| Cloud access point SGTIN      | (none)                           |
-| `HOMEMATIC_IP_AUTH_TOKEN`        | Cloud auth token              | (none)                           |
-| `HOMEMATIC_IP_CLIENT_ID`         | Cloud client ID               | (none)                           |
-| `HOMEMATIC_IP_CLIENT_SECRET`     | Cloud client secret           | (none)                           |
-| `HOMEMATIC_IP_API_URL`           | Cloud API URL                 | https://ps1.homematic.com:6969   |
+| Variable                          | Description                       | Default                        |
+| --------------------------------- | --------------------------------- | ------------------------------ |
+| `PORT`                            | Web UI port                       | 8080                           |
+| `LOG_LEVEL`                       | Log detail: debug/info/warn/error | info                           |
+| `HOMEMATIC_MODE`                  | Connection mode                   | auto                           |
+| `HOMEMATIC_CCU_HOST`              | CCU address                       | 192.168.1.100                  |
+| `HOMEMATIC_CCU_PORT`              | XML-RPC port                      | 2001                           |
+| `HOMEMATIC_CCU_USERNAME`          | CCU username                      | (none)                         |
+| `HOMEMATIC_CCU_PASSWORD`          | CCU password                      | (none)                         |
+| `HOMEMATIC_CCU_USE_TLS`           | Use TLS for XML-RPC               | false                          |
+| `HOMEMATIC_IP_ACCESS_POINT_SGTIN` | Cloud access point SGTIN          | (none)                         |
+| `HOMEMATIC_IP_AUTH_TOKEN`         | Cloud auth token                  | (none)                         |
+| `HOMEMATIC_IP_CLIENT_ID`          | Cloud client ID                   | (none)                         |
+| `HOMEMATIC_IP_CLIENT_SECRET`      | Cloud client secret               | (none)                         |
+| `HOMEMATIC_IP_API_URL`            | Cloud API URL                     | https://ps1.homematic.com:6969 |
 
 ### JSON Config File
 
@@ -281,17 +281,17 @@ Run `uninstall.sh` or remove the addon via CCU Web UI. The script:
 
 ## Troubleshooting
 
-| Problem                          | Solution                                                                    |
-| -------------------------------- | --------------------------------------------------------------------------- |
-| "Node.js ist nicht installiert!" | Install the "Node.js for CCU" addon first (>= 18)                          |
-| npm install fails                | Build includes pre-installed node_modules; check archive integrity          |
-| Port 8080 already in use         | Set `PORT=8081` in `.env`                                                   |
-| Addon not starting after reboot  | Verify init script: `ls -la /etc/init.d/my-homematic-addon`                 |
-| No devices found                 | Check `HOMEMATIC_MODE` and corresponding credentials in `.env`              |
-| Connection refused (local mode)  | Verify CCU IP and that XML-RPC is enabled on port 2001                      |
-| FRITZ!Box connection fails       | Check FTP is enabled on FRITZ!Box; verify credentials and path              |
-| iCloud login fails               | Ensure Python 3 with pyicloud is installed; check 2FA setup                 |
-| Health check: `curl http://[CCU-IP]:8080/api/health` | Returns system status and CCU connection state  |
-| Logs                             | Check `/var/log/my-homematic-addon.log`                                     |
-| Service status                   | `ssh root@[CCU-IP] /etc/init.d/my-homematic-addon status`                  |
-| Restart service                  | `ssh root@[CCU-IP] /etc/init.d/my-homematic-addon restart`                  |
+| Problem                                              | Solution                                                           |
+| ---------------------------------------------------- | ------------------------------------------------------------------ |
+| "Node.js ist nicht installiert!"                     | Install the "Node.js for CCU" addon first (>= 18)                  |
+| npm install fails                                    | Build includes pre-installed node_modules; check archive integrity |
+| Port 8080 already in use                             | Set `PORT=8081` in `.env`                                          |
+| Addon not starting after reboot                      | Verify init script: `ls -la /etc/init.d/my-homematic-addon`        |
+| No devices found                                     | Check `HOMEMATIC_MODE` and corresponding credentials in `.env`     |
+| Connection refused (local mode)                      | Verify CCU IP and that XML-RPC is enabled on port 2001             |
+| FRITZ!Box connection fails                           | Check FTP is enabled on FRITZ!Box; verify credentials and path     |
+| iCloud login fails                                   | Ensure Python 3 with pyicloud is installed; check 2FA setup        |
+| Health check: `curl http://[CCU-IP]:8080/api/health` | Returns system status and CCU connection state                     |
+| Logs                                                 | Check `/var/log/my-homematic-addon.log`                            |
+| Service status                                       | `ssh root@[CCU-IP] /etc/init.d/my-homematic-addon status`          |
+| Restart service                                      | `ssh root@[CCU-IP] /etc/init.d/my-homematic-addon restart`         |

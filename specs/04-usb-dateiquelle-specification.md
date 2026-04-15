@@ -6,24 +6,24 @@ Das Addon erkennt und liest Tabellendateien (.xlsx, .numbers) von einem an der C
 
 ## 2. Entscheidungen aus dem Brainstorming
 
-| Thema | Entscheidung |
-|---|---|
-| Verzeichnisstruktur | `src/sources/` mit fileSourceManager.js, fileSource.js, usbFileSource.js |
-| Interface-Methoden | 6 Methoden: listFiles, readFile, getChecksum, isAvailable, getType, getConfig |
-| USB-Erkennung | Mount-Punkte scannen (`/media/usb*`) + `mount`-Befehl parsen |
-| Polling | Kein automatisches Polling in Epic 4; nur manueller "Jetzt pruefen"-Button (Polling Engine kommt in Epic 7) |
-| Import-Modus | Halb-automatisch: Dateien auflisten, Benutzer waehlt "Importieren" |
-| Dateifilter | Kein Standard-Unterordner; Benutzer muss Pfad immer angeben |
-| Mehrere Dateien | Alle auflisten, Benutzer waehlt einzeln |
-| Zeitplan-Update | Bestehenden Zeitplan aktualisieren (match ueber Dateiname + Quelltyp) |
-| Persistenz | `sources.json` -- ein Objekt pro Quellentyp (flache Struktur) |
-| Checksum | MD5 |
-| REST API | 5 neue Endpunkte |
-| USB-Entfernung | Graceful Error, importierte Zeitplaene bleiben erhalten |
-| Entwicklung/Test | Beliebiger lokaler Ordner als "USB-Mount" konfigurierbar |
-| UI-Integration | Neuer Tab/Bereich "Dateiquellen" |
-| Herkunfts-Tracking | `source`-Objekt im Zeitplan-Schema |
-| Rueckwaertskompatibilitaet | Fehlendes `source`-Feld = implizit `type: "upload"` |
+| Thema                      | Entscheidung                                                                                                |
+| -------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| Verzeichnisstruktur        | `src/sources/` mit fileSourceManager.js, fileSource.js, usbFileSource.js                                    |
+| Interface-Methoden         | 6 Methoden: listFiles, readFile, getChecksum, isAvailable, getType, getConfig                               |
+| USB-Erkennung              | Mount-Punkte scannen (`/media/usb*`) + `mount`-Befehl parsen                                                |
+| Polling                    | Kein automatisches Polling in Epic 4; nur manueller "Jetzt pruefen"-Button (Polling Engine kommt in Epic 7) |
+| Import-Modus               | Halb-automatisch: Dateien auflisten, Benutzer waehlt "Importieren"                                          |
+| Dateifilter                | Kein Standard-Unterordner; Benutzer muss Pfad immer angeben                                                 |
+| Mehrere Dateien            | Alle auflisten, Benutzer waehlt einzeln                                                                     |
+| Zeitplan-Update            | Bestehenden Zeitplan aktualisieren (match ueber Dateiname + Quelltyp)                                       |
+| Persistenz                 | `sources.json` -- ein Objekt pro Quellentyp (flache Struktur)                                               |
+| Checksum                   | MD5                                                                                                         |
+| REST API                   | 5 neue Endpunkte                                                                                            |
+| USB-Entfernung             | Graceful Error, importierte Zeitplaene bleiben erhalten                                                     |
+| Entwicklung/Test           | Beliebiger lokaler Ordner als "USB-Mount" konfigurierbar                                                    |
+| UI-Integration             | Neuer Tab/Bereich "Dateiquellen"                                                                            |
+| Herkunfts-Tracking         | `source`-Objekt im Zeitplan-Schema                                                                          |
+| Rueckwaertskompatibilitaet | Fehlendes `source`-Feld = implizit `type: "upload"`                                                         |
 
 ## 3. Implementierung
 
@@ -38,32 +38,32 @@ export class FileSource {
   async listFiles() {
     // -> Array<{ name, path, size, modified }>
     // Alle .xlsx und .numbers Dateien im konfigurierten Pfad
-    throw new Error('Nicht implementiert');
+    throw new Error("Nicht implementiert");
   }
 
   async readFile(filePath) {
     // -> Buffer (Dateiinhalt)
-    throw new Error('Nicht implementiert');
+    throw new Error("Nicht implementiert");
   }
 
   async getChecksum(filePath) {
     // -> string (MD5-Hash)
-    throw new Error('Nicht implementiert');
+    throw new Error("Nicht implementiert");
   }
 
   async isAvailable() {
     // -> boolean (Quelle erreichbar/gemountet?)
-    throw new Error('Nicht implementiert');
+    throw new Error("Nicht implementiert");
   }
 
   getType() {
     // -> string ('usb', 'fritzbox', 'icloud')
-    throw new Error('Nicht implementiert');
+    throw new Error("Nicht implementiert");
   }
 
   getConfig() {
     // -> object (aktuelle Konfiguration)
-    throw new Error('Nicht implementiert');
+    throw new Error("Nicht implementiert");
   }
 }
 ```
@@ -158,13 +158,13 @@ export class FileSourceManager {
 
 **Felder:**
 
-| Feld | Typ | Beschreibung |
-|---|---|---|
-| `enabled` | boolean | Ob die Quelle aktiv ist |
-| `mountPoint` | string | Pfad zum USB-Mount-Punkt (Benutzer muss angeben) |
-| `subFolder` | string | Optionaler Unterordner auf dem Stick |
-| `lastChecked` | string\|null | ISO-8601 Zeitstempel der letzten Pruefung |
-| `files` | object | Zuletzt gesehene Dateien mit MD5-Hashes: `{ "Heizplan.xlsx": "abc123..." }` |
+| Feld          | Typ          | Beschreibung                                                                |
+| ------------- | ------------ | --------------------------------------------------------------------------- |
+| `enabled`     | boolean      | Ob die Quelle aktiv ist                                                     |
+| `mountPoint`  | string       | Pfad zum USB-Mount-Punkt (Benutzer muss angeben)                            |
+| `subFolder`   | string       | Optionaler Unterordner auf dem Stick                                        |
+| `lastChecked` | string\|null | ISO-8601 Zeitstempel der letzten Pruefung                                   |
+| `files`       | object       | Zuletzt gesehene Dateien mit MD5-Hashes: `{ "Heizplan.xlsx": "abc123..." }` |
 
 Spaetere Epics fuegen weitere Schluessel hinzu (`fritzbox`, `icloud`).
 
@@ -206,6 +206,7 @@ Alle neuen Endpunkte in `server.js`:
 Alle konfigurierten Quellen auflisten.
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -228,6 +229,7 @@ Alle konfigurierten Quellen auflisten.
 Quelle konfigurieren.
 
 **Request Body:**
+
 ```json
 {
   "enabled": true,
@@ -237,6 +239,7 @@ Quelle konfigurieren.
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -245,6 +248,7 @@ Quelle konfigurieren.
 ```
 
 **Validierung:**
+
 - `type` muss `usb` sein (spaeter auch `fritzbox`, `icloud`)
 - `mountPoint` darf nicht leer sein wenn `enabled: true`
 
@@ -253,13 +257,24 @@ Quelle konfigurieren.
 Manuellen Scan ausloesen ("Jetzt pruefen"-Button).
 
 **Response:**
+
 ```json
 {
   "success": true,
   "data": {
     "files": [
-      { "name": "Heizplan-Winter.xlsx", "path": "/media/usb0/Heizplaene/Heizplan-Winter.xlsx", "size": 15234, "modified": "2026-03-20T14:30:00Z" },
-      { "name": "Sondertermine.numbers", "path": "/media/usb0/Heizplaene/Sondertermine.numbers", "size": 8912, "modified": "2026-03-18T09:00:00Z" }
+      {
+        "name": "Heizplan-Winter.xlsx",
+        "path": "/media/usb0/Heizplaene/Heizplan-Winter.xlsx",
+        "size": 15234,
+        "modified": "2026-03-20T14:30:00Z"
+      },
+      {
+        "name": "Sondertermine.numbers",
+        "path": "/media/usb0/Heizplaene/Sondertermine.numbers",
+        "size": 8912,
+        "modified": "2026-03-18T09:00:00Z"
+      }
     ],
     "checkedAt": "2026-03-22T10:00:00Z"
   }
@@ -267,6 +282,7 @@ Manuellen Scan ausloesen ("Jetzt pruefen"-Button).
 ```
 
 **Fehler wenn Quelle nicht verfuegbar:**
+
 ```json
 {
   "success": false,
@@ -285,6 +301,7 @@ Gefundene Dateien auflisten (aus Cache des letzten Scans, ohne neuen Scan).
 Datei importieren und Zeitplan erstellen/aktualisieren.
 
 **Request Body:**
+
 ```json
 {
   "fileName": "Heizplan-Winter.xlsx"
@@ -292,6 +309,7 @@ Datei importieren und Zeitplan erstellen/aktualisieren.
 ```
 
 **Response (neuer Zeitplan):**
+
 ```json
 {
   "success": true,
@@ -305,6 +323,7 @@ Datei importieren und Zeitplan erstellen/aktualisieren.
 ```
 
 **Response (aktualisierter Zeitplan):**
+
 ```json
 {
   "success": true,

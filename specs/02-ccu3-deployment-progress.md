@@ -2,21 +2,21 @@
 
 ## Team (Star Trek)
 
-| Crew Member | Aufgabe | Status |
-|-------------|---------|--------|
-| Kirk | Logger-Modul erstellen (`src/utils/logger.js`) | Erledigt |
-| Spock | `console.log/error/warn` durch Logger ersetzen | Erledigt |
-| Uhura | Default-Port auf 8080 aendern | Erledigt |
-| Scotty | Build-Script ueberarbeiten (node_modules bundeln) | Erledigt |
-| McCoy | install.sh ueberarbeiten (.env, Node-Pruefung, kein npm) | Erledigt |
-| Chekov | Health-Check-Endpunkt (`GET /api/health`) | Erledigt |
-| Sulu | `.env.example` erstellen und README aktualisieren | Erledigt |
-| Worf | Tests aktualisieren und Verifikation | Erledigt |
+| Crew Member | Aufgabe                                                  | Status   |
+| ----------- | -------------------------------------------------------- | -------- |
+| Kirk        | Logger-Modul erstellen (`src/utils/logger.js`)           | Erledigt |
+| Spock       | `console.log/error/warn` durch Logger ersetzen           | Erledigt |
+| Uhura       | Default-Port auf 8080 aendern                            | Erledigt |
+| Scotty      | Build-Script ueberarbeiten (node_modules bundeln)        | Erledigt |
+| McCoy       | install.sh ueberarbeiten (.env, Node-Pruefung, kein npm) | Erledigt |
+| Chekov      | Health-Check-Endpunkt (`GET /api/health`)                | Erledigt |
+| Sulu        | `.env.example` erstellen und README aktualisieren        | Erledigt |
+| Worf        | Tests aktualisieren und Verifikation                     | Erledigt |
 
 ## Steps
 
 - [x] 1. Logger-Modul mit 4 Stufen (debug/info/warn/error), konfigurierbar ueber LOG_LEVEL
-- [x] 2. Alle console.log/error/warn in server.js und src/**/*.js durch logger ersetzt
+- [x] 2. Alle console.log/error/warn in server.js und src/\*_/_.js durch logger ersetzt
 - [x] 3. Default-Port von 3000 auf 8080 geaendert (server.js)
 - [x] 4. Build-Script: npm ci --production, node_modules ins tar.gz, native-Module-Warnung
 - [x] 5. install.sh: npm install entfernt, node_modules-Pruefung, .env-Generierung, Node >= 18 Pruefung, Port 8080
@@ -28,17 +28,17 @@
 
 ## Geaenderte/Neue Dateien
 
-| Datei | Aenderung |
-|-------|-----------|
-| `src/utils/logger.js` | **Neu:** Logger-Modul mit 4 Stufen |
-| `server.js` | Logger, Port 8080, Health-Check-Endpunkt |
-| `src/scheduler/scheduleManager.js` | Logger, getActiveCount() |
-| `src/areas/areaManager.js` | Logger |
-| `src/config/config.js` | Logger |
-| `addon/package-addon.sh` | node_modules bundeln, native-Module-Warnung |
-| `addon/install.sh` | .env-Generierung, Node >= 18 Pruefung, kein npm install, Port 8080 |
-| `.env.example` | **Neu:** Beispiel-Konfiguration |
-| `README.md` | CCU3-Installationsanleitung, Port 8080, Health-Check Endpunkt |
+| Datei                              | Aenderung                                                          |
+| ---------------------------------- | ------------------------------------------------------------------ |
+| `src/utils/logger.js`              | **Neu:** Logger-Modul mit 4 Stufen                                 |
+| `server.js`                        | Logger, Port 8080, Health-Check-Endpunkt                           |
+| `src/scheduler/scheduleManager.js` | Logger, getActiveCount()                                           |
+| `src/areas/areaManager.js`         | Logger                                                             |
+| `src/config/config.js`             | Logger                                                             |
+| `addon/package-addon.sh`           | node_modules bundeln, native-Module-Warnung                        |
+| `addon/install.sh`                 | .env-Generierung, Node >= 18 Pruefung, kein npm install, Port 8080 |
+| `.env.example`                     | **Neu:** Beispiel-Konfiguration                                    |
+| `README.md`                        | CCU3-Installationsanleitung, Port 8080, Health-Check Endpunkt      |
 
 ## Verification Results
 

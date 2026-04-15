@@ -30,7 +30,10 @@ vi.mock("util", async (importOriginal) => {
         }
         if (action === "login") {
           return {
-            stdout: JSON.stringify({ status: "2fa_required", message: "Code gesendet." }),
+            stdout: JSON.stringify({
+              status: "2fa_required",
+              message: "Code gesendet.",
+            }),
           };
         }
         if (action === "verify-2fa") {
@@ -43,7 +46,12 @@ vi.mock("util", async (importOriginal) => {
             stdout: JSON.stringify({
               status: "ok",
               files: [
-                { name: "test.xlsx", path: "/Heizung/test.xlsx", size: 1000, modified: "2026-01-01" },
+                {
+                  name: "test.xlsx",
+                  path: "/Heizung/test.xlsx",
+                  size: 1000,
+                  modified: "2026-01-01",
+                },
               ],
             }),
           };

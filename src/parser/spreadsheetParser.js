@@ -117,10 +117,7 @@ export class SpreadsheetParser {
       "end-datum",
       "enddatum",
     ]);
-    columns.endTime = this.findColumn(normalizedKeys, [
-      "end-zeit",
-      "endzeit",
-    ]);
+    columns.endTime = this.findColumn(normalizedKeys, ["end-zeit", "endzeit"]);
 
     // Wenn getrennte Spalten gefunden und keine kombinierten vorhanden
     // (Vermeidung von Konflikten wenn z.B. "Startdatum" sowohl als kombiniert
@@ -222,10 +219,7 @@ export class SpreadsheetParser {
         row[columnMap.startDateTime],
         "Startdatum",
       );
-      endDateTime = this.parseDateTime(
-        row[columnMap.endDateTime],
-        "Enddatum",
-      );
+      endDateTime = this.parseDateTime(row[columnMap.endDateTime], "Enddatum");
     }
 
     if (startDateTime >= endDateTime) {
@@ -233,8 +227,7 @@ export class SpreadsheetParser {
     }
 
     const profileValue = row[columnMap.profile] || null;
-    const { controlMode, deviceProfile } =
-      this.parseProfileValue(profileValue);
+    const { controlMode, deviceProfile } = this.parseProfileValue(profileValue);
 
     let temperature = null;
     const profile = controlMode === "temperature" ? profileValue : null;
@@ -301,8 +294,10 @@ export class SpreadsheetParser {
       throw new Error(`${fieldName}-Zeit fehlt`);
     }
 
-    const datePart = dateValue instanceof Date ? dateValue : new Date(dateValue);
-    const timePart = timeValue instanceof Date ? timeValue : new Date(timeValue);
+    const datePart =
+      dateValue instanceof Date ? dateValue : new Date(dateValue);
+    const timePart =
+      timeValue instanceof Date ? timeValue : new Date(timeValue);
 
     if (isNaN(datePart.getTime())) {
       throw new Error(`${fieldName} hat ungueltiges Datum`);

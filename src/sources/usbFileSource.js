@@ -53,9 +53,7 @@ export class UsbFileSource extends FileSource {
     const searchPath = this._getSearchPath();
 
     if (!fs.existsSync(searchPath)) {
-      throw new Error(
-        `USB-Laufwerk nicht gefunden unter ${searchPath}`,
-      );
+      throw new Error(`USB-Laufwerk nicht gefunden unter ${searchPath}`);
     }
 
     const entries = fs.readdirSync(searchPath);
@@ -86,18 +84,14 @@ export class UsbFileSource extends FileSource {
 
   async readFile(filePath) {
     if (!fs.existsSync(filePath)) {
-      throw new Error(
-        "Datei nicht mehr verfuegbar (USB-Stick entfernt?)",
-      );
+      throw new Error("Datei nicht mehr verfuegbar (USB-Stick entfernt?)");
     }
     return fs.readFileSync(filePath);
   }
 
   async getChecksum(filePath) {
     if (!fs.existsSync(filePath)) {
-      throw new Error(
-        "Datei nicht mehr verfuegbar (USB-Stick entfernt?)",
-      );
+      throw new Error("Datei nicht mehr verfuegbar (USB-Stick entfernt?)");
     }
     const content = fs.readFileSync(filePath);
     return crypto.createHash("md5").update(content).digest("hex");

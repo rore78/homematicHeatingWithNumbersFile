@@ -78,12 +78,12 @@ HmIP-Thermostate haben mehrere Kanaele. Fuer die Heizungssteuerung ist Kanal 1 r
 
 ```javascript
 // Aktuell (localClient.js):
-setValue(deviceId, "SET_TEMPERATURE", temperature)
+setValue(deviceId, "SET_TEMPERATURE", temperature);
 
 // Fuer Profilsteuerung muesste es sein:
-setValue(deviceId + ":1", "ACTIVE_PROFILE", profileNumber)
+setValue(deviceId + ":1", "ACTIVE_PROFILE", profileNumber);
 // oder
-setValue(deviceId, "ACTIVE_PROFILE", profileNumber)  // falls deviceId bereits den Kanal enthaelt
+setValue(deviceId, "ACTIVE_PROFILE", profileNumber); // falls deviceId bereits den Kanal enthaelt
 ```
 
 Wie adressiert die aktuelle Implementierung Kanaele? Muessen wir das anpassen?
@@ -195,7 +195,7 @@ Option C: Neue Spalte "Geraeteprofil" (separate Spalte fuer Profilnummer)
 | Wohnzimmer | 2026-01-15 22:00 | 2026-01-16 08:00 |      |            | 2             |
 ```
 
-- [X] Option A: "Heizprofil"-Spalte ueberladen mit "Geraeteprofil:N" Syntax (Empfohlen) -- keine neue Spalte, kompatibel
+- [x] Option A: "Heizprofil"-Spalte ueberladen mit "Geraeteprofil:N" Syntax (Empfohlen) -- keine neue Spalte, kompatibel
 - [ ] Option B: Neue Spalte "Steuerungsart"
 - [ ] Option C: Neue separate Spalte "Geraeteprofil"
 
@@ -276,8 +276,11 @@ for (const scheduleItem of area.schedule) {
 // NEU:
 for (const scheduleItem of area.schedule) {
   if (isWithinTimeWindow(scheduleItem)) {
-    if (scheduleItem.controlMode === 'deviceProfile') {
-      await deviceController.setHeatingProfile(deviceId, scheduleItem.deviceProfile);
+    if (scheduleItem.controlMode === "deviceProfile") {
+      await deviceController.setHeatingProfile(
+        deviceId,
+        scheduleItem.deviceProfile,
+      );
     } else {
       const temp = resolveTemperature(scheduleItem);
       await deviceController.setTemperature(deviceId, temp);
@@ -304,7 +307,7 @@ Beispiel: 08:00-22:00 Geraeteprofil 2 (Komfort-Wochenprogramm)
 ```
 
 - [ ] Nichts zuruecksetzen -- Profil bleibt aktiv bis naechster Eintrag kommt (Empfohlen) -- konsistent mit Temperaturverhalten
-- [X] Auf Profil 1 (Standard) zuruecksetzen wenn Zeitfenster endet
+- [x] Auf Profil 1 (Standard) zuruecksetzen wenn Zeitfenster endet
 - [ ] Konfigurierbares "Rueckfall-Profil" in der UI
 
 ---

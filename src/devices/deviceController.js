@@ -57,7 +57,9 @@ export class DeviceController {
         state: device.channels || {},
       };
     } catch (error) {
-      throw new Error(`Fehler beim Abrufen des Geraetestatus: ${error.message}`);
+      throw new Error(
+        `Fehler beim Abrufen des Geraetestatus: ${error.message}`,
+      );
     }
   }
 
@@ -141,7 +143,9 @@ export class DeviceController {
       await this.client.setControlMode(deviceId, controlMode);
       return true;
     } catch (error) {
-      throw new Error(`Fehler beim Setzen des Steuerungsmodus: ${error.message}`);
+      throw new Error(
+        `Fehler beim Setzen des Steuerungsmodus: ${error.message}`,
+      );
     }
   }
 }

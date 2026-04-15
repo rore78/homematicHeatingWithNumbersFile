@@ -18,8 +18,7 @@ const CONTAINER_TOKEN_PATH = "/TOKEN";
  */
 export class ConnectApiClient {
   constructor(config = {}) {
-    this.pluginId =
-      config.pluginId || "com.redlberger.hmip.heizungssteuerung";
+    this.pluginId = config.pluginId || "com.redlberger.hmip.heizungssteuerung";
     this.host = config.host || "host.containers.internal";
     this.port = config.port || 9001;
     this.authToken = config.authToken || this._readContainerToken();
@@ -375,7 +374,11 @@ export class ConnectApiClient {
       );
       return;
     }
-    this._sendMessage("CONFIG_TEMPLATE_RESPONSE", this.configTemplate, message.id);
+    this._sendMessage(
+      "CONFIG_TEMPLATE_RESPONSE",
+      this.configTemplate,
+      message.id,
+    );
   }
 
   _handleConfigUpdateRequest(message) {
@@ -477,9 +480,7 @@ export class ConnectApiClient {
       1000 * Math.pow(2, this.reconnectAttempts),
     );
     this.reconnectAttempts++;
-    logger.info(
-      `Reconnect in ${delay}ms (Versuch ${this.reconnectAttempts})`,
-    );
+    logger.info(`Reconnect in ${delay}ms (Versuch ${this.reconnectAttempts})`);
     this.reconnectTimer = setTimeout(() => {
       this.reconnectTimer = null;
       this.connect().catch((err) => {

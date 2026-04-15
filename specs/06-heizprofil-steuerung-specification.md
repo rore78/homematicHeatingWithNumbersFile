@@ -6,21 +6,21 @@ Neben der bestehenden direkten Temperatursteuerung auch Heizprofile (Wochenprogr
 
 ## 2. Entscheidungen aus dem Brainstorming
 
-| Thema | Entscheidung |
-|---|---|
-| Steuerungsebene | Nur Ebene 1: ACTIVE_PROFILE wechseln (kein Wochenprogramm schreiben) |
-| Auto-Modus | Immer Auto-Modus setzen wenn ein Profil aktiviert wird |
-| XML-RPC Kanal | Kanalauswahl konfigurierbar |
-| Cloud API | Beides versuchen: Cloud + Local, mit Fallback-Logik |
-| Datenmodell | Expliziter `controlMode` + `deviceProfile` im Zeitplan-Eintrag |
-| Rueckwaertskompatibilitaet | Fehlender `controlMode` = implizit "temperature", keine Migration |
-| Tabellen-Schema | "Heizprofil"-Spalte ueberladen mit "Geraeteprofil:N" Syntax |
-| Konflikt Temp + Profil | Geraeteprofil hat Vorrang, Temperatur wird ignoriert |
-| DeviceController | Separate `setHeatingProfile()` Methode |
-| Profil auslesen | `getHeatingProfile()` implementieren |
-| checkAndExecute | Switch-Case fuer Steuerungsmodus |
-| Zeitfenster-Ende | Auf Profil 1 (Standard) zuruecksetzen |
-| UI-Anzeige | Kombinierte "Steuerung"-Spalte mit Icon |
+| Thema                      | Entscheidung                                                         |
+| -------------------------- | -------------------------------------------------------------------- |
+| Steuerungsebene            | Nur Ebene 1: ACTIVE_PROFILE wechseln (kein Wochenprogramm schreiben) |
+| Auto-Modus                 | Immer Auto-Modus setzen wenn ein Profil aktiviert wird               |
+| XML-RPC Kanal              | Kanalauswahl konfigurierbar                                          |
+| Cloud API                  | Beides versuchen: Cloud + Local, mit Fallback-Logik                  |
+| Datenmodell                | Expliziter `controlMode` + `deviceProfile` im Zeitplan-Eintrag       |
+| Rueckwaertskompatibilitaet | Fehlender `controlMode` = implizit "temperature", keine Migration    |
+| Tabellen-Schema            | "Heizprofil"-Spalte ueberladen mit "Geraeteprofil:N" Syntax          |
+| Konflikt Temp + Profil     | Geraeteprofil hat Vorrang, Temperatur wird ignoriert                 |
+| DeviceController           | Separate `setHeatingProfile()` Methode                               |
+| Profil auslesen            | `getHeatingProfile()` implementieren                                 |
+| checkAndExecute            | Switch-Case fuer Steuerungsmodus                                     |
+| Zeitfenster-Ende           | Auf Profil 1 (Standard) zuruecksetzen                                |
+| UI-Anzeige                 | Kombinierte "Steuerung"-Spalte mit Icon                              |
 
 ## 3. Implementierung
 
@@ -152,9 +152,9 @@ Jeder Zeitplan-Eintrag (`schedules/{uuid}.json`) erhaelt zwei neue optionale Fel
 
 **Felder:**
 
-| Feld | Typ | Beschreibung |
-|---|---|---|
-| `controlMode` | string | `"temperature"` (Standard) oder `"deviceProfile"` |
+| Feld            | Typ          | Beschreibung                                                               |
+| --------------- | ------------ | -------------------------------------------------------------------------- |
+| `controlMode`   | string       | `"temperature"` (Standard) oder `"deviceProfile"`                          |
 | `deviceProfile` | number\|null | Geraete-Profilnummer: 1, 2 oder 3 (nur bei `controlMode: "deviceProfile"`) |
 
 **Rueckwaertskompatibilitaet:** Bestehende Zeitplan-Eintraege ohne `controlMode`-Feld werden als `controlMode: "temperature"` interpretiert. Keine Migration noetig.
@@ -171,22 +171,25 @@ Die bestehende "Heizprofil"-Spalte wird erweitert, um Geraeteprofile zu erkennen
 // Syntax: "Geraeteprofil:N" wobei N = 1, 2 oder 3
 // Auch akzeptiert: "Geräteprofil:N", "GP:N", "Profil:N"
 function parseProfileValue(value) {
-  if (!value || typeof value !== 'string') return { controlMode: 'temperature', deviceProfile: null };
+  if (!value || typeof value !== "string")
+    return { controlMode: "temperature", deviceProfile: null };
 
   const trimmed = value.trim();
 
   // Geraeteprofil-Erkennung
-  const deviceProfileMatch = trimmed.match(/^(?:Ger[aä]teprofil|GP|Profil):(\d)$/i);
+  const deviceProfileMatch = trimmed.match(
+    /^(?:Ger[aä]teprofil|GP|Profil):(\d)$/i,
+  );
   if (deviceProfileMatch) {
     const num = parseInt(deviceProfileMatch[1], 10);
     if (num >= 1 && num <= 3) {
-      return { controlMode: 'deviceProfile', deviceProfile: num };
+      return { controlMode: "deviceProfile", deviceProfile: num };
     }
     throw new Error(`Ungueltiges Geraeteprofil: ${num}. Erlaubt: 1, 2 oder 3.`);
   }
 
   // Addon-Profil (bestehendes Verhalten: "Komfort", "Nacht", etc.)
-  return { controlMode: 'temperature', deviceProfile: null };
+  return { controlMode: "temperature", deviceProfile: null };
 }
 ```
 
@@ -210,6 +213,7 @@ Die normalisierte Ausgabe erhaelt die neuen Felder:
 **Konflikt-Regel:** Wenn die "Heizprofil"-Spalte ein Geraeteprofil enthaelt (`Geraeteprofil:2`) und gleichzeitig eine Temperatur angegeben ist, hat das Geraeteprofil Vorrang. Die Temperatur wird ignoriert, `controlMode` wird auf `"deviceProfile"` gesetzt.
 
 **Validierung:**
+
 - Bei `controlMode: "deviceProfile"`: `temperature` darf null sein (kein Pflichtfeld)
 - Bei `controlMode: "temperature"`: `temperature` muss gesetzt sein (bestehende Validierung)
 - `deviceProfile` muss 1, 2 oder 3 sein wenn angegeben
@@ -229,9 +233,9 @@ const scheduleItem = {
   endDateTime: row.endDateTime,
   temperature: row.temperature,
   profile: row.profile,
-  deviceProfile: row.deviceProfile ?? null,     // NEU
-  controlMode: row.controlMode ?? 'temperature', // NEU
-  notes: row.notes
+  deviceProfile: row.deviceProfile ?? null, // NEU
+  controlMode: row.controlMode ?? "temperature", // NEU
+  notes: row.notes,
 };
 ```
 
@@ -242,13 +246,17 @@ for (const scheduleItem of area.schedule) {
   if (isWithinTimeWindow(scheduleItem, now)) {
     for (const deviceId of area.devices) {
       switch (scheduleItem.controlMode) {
-        case 'deviceProfile':
-          await this.deviceController.setHeatingProfile(deviceId, scheduleItem.deviceProfile);
+        case "deviceProfile":
+          await this.deviceController.setHeatingProfile(
+            deviceId,
+            scheduleItem.deviceProfile,
+          );
           break;
-        case 'temperature':
+        case "temperature":
         default:
           const temp = this.heatingProfile.getTemperature(
-            scheduleItem.profile, scheduleItem.temperature
+            scheduleItem.profile,
+            scheduleItem.temperature,
           );
           await this.deviceController.setTemperature(deviceId, temp);
           break;
@@ -265,10 +273,10 @@ Wenn ein `deviceProfile`-Zeitfenster endet und kein naechstes Zeitfenster aktiv 
 ```javascript
 // Neue Logik in checkAndExecute():
 for (const scheduleItem of area.schedule) {
-  if (scheduleItem.controlMode === 'deviceProfile') {
+  if (scheduleItem.controlMode === "deviceProfile") {
     const justEnded = hasJustEnded(scheduleItem, now, lastCheckTime);
-    const noActiveWindow = !area.schedule.some(item =>
-      isWithinTimeWindow(item, now)
+    const noActiveWindow = !area.schedule.some((item) =>
+      isWithinTimeWindow(item, now),
     );
 
     if (justEnded && noActiveWindow) {
@@ -308,9 +316,11 @@ static isDeviceProfile(value) {
 #### Bestehende Endpunkte anpassen
 
 **`GET /api/schedules`** und **`GET /api/schedules/:id`:**
+
 - Die neuen Felder `controlMode` und `deviceProfile` werden automatisch in der Antwort enthalten (da sie in der JSON-Datei stehen)
 
 **`POST /api/upload`:**
+
 - Der Parser liefert jetzt `controlMode` und `deviceProfile` -- diese werden an `createSchedule()` weitergegeben
 
 #### Neuer Endpunkt
@@ -320,6 +330,7 @@ static isDeviceProfile(value) {
 Aktuelles Heizprofil eines Geraets auslesen.
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -332,11 +343,13 @@ Aktuelles Heizprofil eines Geraets auslesen.
 ```
 
 **`modeLabel`-Mapping:**
+
 - `0` -> `"Auto"`
 - `1` -> `"Manuell"`
 - `2` -> `"Party"`
 
 **Fehler wenn Geraet kein Thermostat:**
+
 ```json
 {
   "success": false,
@@ -349,6 +362,7 @@ Aktuelles Heizprofil eines Geraets auslesen.
 Heizprofil auf einem Geraet setzen (manueller Trigger ausserhalb von Zeitplaenen).
 
 **Request Body:**
+
 ```json
 {
   "profileNumber": 2
@@ -356,6 +370,7 @@ Heizprofil auf einem Geraet setzen (manueller Trigger ausserhalb von Zeitplaenen
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -364,6 +379,7 @@ Heizprofil auf einem Geraet setzen (manueller Trigger ausserhalb von Zeitplaenen
 ```
 
 **Validierung:**
+
 - `profileNumber` muss 1, 2 oder 3 sein
 - Fehlermeldung auf Deutsch wenn ungueltig
 
@@ -388,6 +404,7 @@ Die Zeitplan-Tabelle erhaelt eine kombinierte "Steuerung"-Spalte statt der bishe
 ```
 
 **Anzeigelogik:**
+
 - `controlMode: "temperature"` + `profile`: `"Komfort (21°C)"`
 - `controlMode: "temperature"` ohne `profile`: `"Temp. 21°C"`
 - `controlMode: "deviceProfile"`: `"Profil {N}"`
@@ -415,8 +432,8 @@ Buttons rufen `POST /api/devices/:id/heating-profile` auf.
 4. **setHeatingProfile** -- wirft Fehler bei ungueltiger Profilnummer (0, 4, "abc")
 5. **setHeatingProfile** -- konfigurierbar mit anderem Kanal (options.channel)
 6. **getHeatingProfile** -- gibt activeProfile und mode zurueck
-7. **_resolveChannelId** -- haengt Kanal an wenn noetig
-8. **_resolveChannelId** -- laesst deviceId unveraendert wenn Kanal vorhanden
+7. **\_resolveChannelId** -- haengt Kanal an wenn noetig
+8. **\_resolveChannelId** -- laesst deviceId unveraendert wenn Kanal vorhanden
 
 ### 4.2 Unit-Tests LocalClient
 

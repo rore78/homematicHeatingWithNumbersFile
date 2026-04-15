@@ -16,7 +16,8 @@ import logger from "./utils/logger.js";
  */
 export class HomematicIPPlugin {
   constructor(options = {}) {
-    this.config = options.config instanceof Config ? options.config : new Config(options);
+    this.config =
+      options.config instanceof Config ? options.config : new Config(options);
     this.dataDir = options.dataDir || process.env.DATA_DIR || process.cwd();
     this.client = null;
     this.controller = null;
@@ -59,9 +60,7 @@ export class HomematicIPPlugin {
     this.controller = new DeviceController(this.client);
 
     // AreaManager und ScheduleManager mit DATA_DIR-Pfaden
-    const areaManager = new AreaManager(
-      path.join(this.dataDir, "areas.json"),
-    );
+    const areaManager = new AreaManager(path.join(this.dataDir, "areas.json"));
     this.scheduleManager = new ScheduleManager(this.controller, {
       schedulesDir: path.join(this.dataDir, "schedules"),
       areaManager,
@@ -127,8 +126,7 @@ export class HomematicIPPlugin {
         pollingInterval: {
           dataType: "INTEGER",
           friendlyName: "Polling-Intervall (Minuten)",
-          description:
-            "Wie oft Dateiquellen auf Aenderungen geprueft werden",
+          description: "Wie oft Dateiquellen auf Aenderungen geprueft werden",
           defaultValue: "60",
           minimum: 5,
           maximum: 1440,

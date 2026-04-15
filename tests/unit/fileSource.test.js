@@ -9,7 +9,9 @@ describe("FileSource", () => {
 
   it("readFile wirft 'Nicht implementiert'", async () => {
     const source = new FileSource();
-    await expect(source.readFile("/any")).rejects.toThrow("Nicht implementiert");
+    await expect(source.readFile("/any")).rejects.toThrow(
+      "Nicht implementiert",
+    );
   });
 
   it("getChecksum wirft 'Nicht implementiert'", async () => {

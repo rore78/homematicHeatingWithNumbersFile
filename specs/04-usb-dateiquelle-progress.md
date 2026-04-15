@@ -2,14 +2,14 @@
 
 ## Team (Star Trek Voyager)
 
-| Crew Member | Aufgabe | Status |
-|-------------|---------|--------|
-| Janeway | FileSource Basis-Klasse + UsbFileSource | Erledigt |
-| Chakotay | FileSourceManager | Erledigt |
-| Tuvok | ScheduleManager erweitern (source-Feld) | Erledigt |
-| Torres | REST API Endpunkte (5 neue) | Erledigt |
-| Paris | Frontend Dateiquellen-Bereich | Erledigt |
-| Kim | Tests und Verifikation | Erledigt |
+| Crew Member | Aufgabe                                 | Status   |
+| ----------- | --------------------------------------- | -------- |
+| Janeway     | FileSource Basis-Klasse + UsbFileSource | Erledigt |
+| Chakotay    | FileSourceManager                       | Erledigt |
+| Tuvok       | ScheduleManager erweitern (source-Feld) | Erledigt |
+| Torres      | REST API Endpunkte (5 neue)             | Erledigt |
+| Paris       | Frontend Dateiquellen-Bereich           | Erledigt |
+| Kim         | Tests und Verifikation                  | Erledigt |
 
 ## Steps
 
@@ -25,19 +25,19 @@
 
 ## Neue/Geaenderte Dateien
 
-| Datei | Aenderung |
-|-------|-----------|
-| `src/sources/fileSource.js` | **Neu:** Abstrakte Basis-Klasse |
-| `src/sources/usbFileSource.js` | **Neu:** USB-Implementierung |
-| `src/sources/fileSourceManager.js` | **Neu:** Orchestrierung + Persistenz |
-| `src/scheduler/scheduleManager.js` | source-Feld, findScheduleBySource, updateSchedule |
-| `server.js` | 5 neue API-Endpunkte, FileSourceManager-Integration |
-| `public/index.html` | Neuer "Dateiquellen"-Bereich |
-| `public/app.js` | Dateiquellen-UI-Logik |
-| `public/style.css` | Styling fuer Dateiquellen |
-| `tests/unit/fileSource.test.js` | **Neu:** 6 Tests |
-| `tests/unit/usbFileSource.test.js` | **Neu:** 14 Tests |
-| `tests/unit/fileSourceManager.test.js` | **Neu:** 13 Tests |
+| Datei                                  | Aenderung                                           |
+| -------------------------------------- | --------------------------------------------------- |
+| `src/sources/fileSource.js`            | **Neu:** Abstrakte Basis-Klasse                     |
+| `src/sources/usbFileSource.js`         | **Neu:** USB-Implementierung                        |
+| `src/sources/fileSourceManager.js`     | **Neu:** Orchestrierung + Persistenz                |
+| `src/scheduler/scheduleManager.js`     | source-Feld, findScheduleBySource, updateSchedule   |
+| `server.js`                            | 5 neue API-Endpunkte, FileSourceManager-Integration |
+| `public/index.html`                    | Neuer "Dateiquellen"-Bereich                        |
+| `public/app.js`                        | Dateiquellen-UI-Logik                               |
+| `public/style.css`                     | Styling fuer Dateiquellen                           |
+| `tests/unit/fileSource.test.js`        | **Neu:** 6 Tests                                    |
+| `tests/unit/usbFileSource.test.js`     | **Neu:** 14 Tests                                   |
+| `tests/unit/fileSourceManager.test.js` | **Neu:** 13 Tests                                   |
 
 ## Verification Results
 

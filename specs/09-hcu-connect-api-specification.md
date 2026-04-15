@@ -6,19 +6,19 @@ Das Addon von einem CCU3-tar.gz-Addon zu einem HCU-Docker-Plugin migrieren, das 
 
 ## Zusammenfassung der Entscheidungen
 
-| Thema | Entscheidung |
-|---|---|
-| CCU3-Support | Entfernen (nur HCU + Cloud) |
-| Client-Architektur | Adapter-Pattern mit generischem `HmipClient`-Interface |
-| Deployment | Nur Dockerfile, CCU3-Build-Script entfernen |
-| Authentifizierung | Automatisch im Container (`/TOKEN`), Remote-Auth-Flow fuer Entwicklung |
-| Nachrichten | Minimaler Satz (Plugin-State, System-Request/Response/Event, Config) |
-| HCU-UI Konfiguration | Basiskonfiguration (Dateiquellen, Polling, Profile) ueber HCU-UI |
-| System-Events | Ja, Live-Updates via `hmip-system-events: true` |
-| System-Requests | Heizungssteuerung + Home-Status (8 Endpunkte) |
-| Web-UI | Keine eigene Web-UI, nur HCU-UI |
-| Persistenz | Alles in `/data` (Container-Mount) |
-| Basis-Image | `ghcr.io/homematicip/alpine-node-simple:0.0.1` |
+| Thema                | Entscheidung                                                           |
+| -------------------- | ---------------------------------------------------------------------- |
+| CCU3-Support         | Entfernen (nur HCU + Cloud)                                            |
+| Client-Architektur   | Adapter-Pattern mit generischem `HmipClient`-Interface                 |
+| Deployment           | Nur Dockerfile, CCU3-Build-Script entfernen                            |
+| Authentifizierung    | Automatisch im Container (`/TOKEN`), Remote-Auth-Flow fuer Entwicklung |
+| Nachrichten          | Minimaler Satz (Plugin-State, System-Request/Response/Event, Config)   |
+| HCU-UI Konfiguration | Basiskonfiguration (Dateiquellen, Polling, Profile) ueber HCU-UI       |
+| System-Events        | Ja, Live-Updates via `hmip-system-events: true`                        |
+| System-Requests      | Heizungssteuerung + Home-Status (8 Endpunkte)                          |
+| Web-UI               | Keine eigene Web-UI, nur HCU-UI                                        |
+| Persistenz           | Alles in `/data` (Container-Mount)                                     |
+| Basis-Image          | `ghcr.io/homematicip/alpine-node-simple:0.0.1`                         |
 
 ## Voraussetzungen
 
@@ -60,6 +60,7 @@ Aus `package.json` entfernen:
 ```
 
 Behalten:
+
 - `ws` -- WebSocket fuer Connect API
 - `axios` -- Cloud API
 - `uuid` -- Nachrichten-IDs
@@ -70,14 +71,15 @@ Behalten:
 
 `src/config/config.js` -- `getMode()` aendern:
 
-| Modus | Vorher | Nachher |
-|---|---|---|
-| `cloud` | REST via axios | Bleibt |
-| `local` | XML-RPC via xmlrpc | **Entfernen** |
-| `hcu` | -- | **Neu: Connect API via WebSocket** |
-| `auto` | Cloud > Local | Cloud > HCU |
+| Modus   | Vorher             | Nachher                            |
+| ------- | ------------------ | ---------------------------------- |
+| `cloud` | REST via axios     | Bleibt                             |
+| `local` | XML-RPC via xmlrpc | **Entfernen**                      |
+| `hcu`   | --                 | **Neu: Connect API via WebSocket** |
+| `auto`  | Cloud > Local      | Cloud > HCU                        |
 
 Neue Umgebungsvariablen:
+
 - `HOMEMATIC_MODE=hcu` -- Expliziter HCU-Modus
 - `HOMEMATIC_HCU_HOST` -- HCU-Hostname (Default: `host.containers.internal` im Container, `hcu1-XXXX.local` remote)
 - `HOMEMATIC_PLUGIN_ID` -- Plugin-ID (Default: `com.redlberger.hmip.heizungssteuerung`)
@@ -173,20 +175,20 @@ await this.client.setTemperature(groupId, temperature);
 Kernkomponenten:
 
 ```javascript
-import WebSocket from 'ws';
-import { v4 as uuidv4 } from 'uuid';
-import { readFileSync, existsSync } from 'fs';
+import WebSocket from "ws";
+import { v4 as uuidv4 } from "uuid";
+import { readFileSync, existsSync } from "fs";
 
 export class ConnectApiClient {
   constructor(config) {
-    this.pluginId = config.pluginId || 'com.redlberger.hmip.heizungssteuerung';
-    this.host = config.hcuHost || 'host.containers.internal';
+    this.pluginId = config.pluginId || "com.redlberger.hmip.heizungssteuerung";
+    this.host = config.hcuHost || "host.containers.internal";
     this.port = config.hcuPort || 9001;
     this.authToken = config.authToken || this._readContainerToken();
     this.ws = null;
     this.pendingRequests = new Map(); // id -> { resolve, reject, timeout }
-    this.eventHandlers = new Map();  // eventType -> [handler]
-    this.systemState = null;         // Gecachter Systemstatus
+    this.eventHandlers = new Map(); // eventType -> [handler]
+    this.systemState = null; // Gecachter Systemstatus
   }
 }
 ```
@@ -585,13 +587,13 @@ Ein einfaches CLI-Script fuer die Ersteinrichtung:
 ### 5.1 Datei: `src/index.js` (umgeschrieben)
 
 ```javascript
-import { Config } from './config/config.js';
-import { ConnectApiClient } from './client/connectApiClient.js';
-import { CloudClient } from './client/cloudClient.js';
-import { DeviceController } from './devices/deviceController.js';
-import { ScheduleManager } from './scheduler/scheduleManager.js';
-import { AreaManager } from './areas/areaManager.js';
-import { HeatingProfile } from './scheduler/heatingProfile.js';
+import { Config } from "./config/config.js";
+import { ConnectApiClient } from "./client/connectApiClient.js";
+import { CloudClient } from "./client/cloudClient.js";
+import { DeviceController } from "./devices/deviceController.js";
+import { ScheduleManager } from "./scheduler/scheduleManager.js";
+import { AreaManager } from "./areas/areaManager.js";
+import { HeatingProfile } from "./scheduler/heatingProfile.js";
 
 export class HomematicIPPlugin {
   constructor(options = {}) {
@@ -605,9 +607,9 @@ export class HomematicIPPlugin {
   async start() {
     // 1. Client erstellen
     const mode = this.config.getMode();
-    if (mode === 'hcu') {
+    if (mode === "hcu") {
       this.client = new ConnectApiClient(this.config);
-    } else if (mode === 'cloud') {
+    } else if (mode === "cloud") {
       this.client = new CloudClient(this.config);
     } else {
       throw new Error(`Unbekannter Modus: ${mode}`);
@@ -617,14 +619,14 @@ export class HomematicIPPlugin {
     await this.client.connect();
 
     // 3. Module initialisieren
-    const dataDir = process.env.DATA_DIR || '/data';
+    const dataDir = process.env.DATA_DIR || "/data";
     this.areaManager = new AreaManager(`${dataDir}/areas.json`);
     this.deviceController = new DeviceController(this.client);
     this.scheduleManager = new ScheduleManager(
       this.deviceController,
       this.areaManager,
       HeatingProfile,
-      `${dataDir}/schedules`
+      `${dataDir}/schedules`,
     );
 
     // 4. Zeitplan-Ausfuehrungsschleife starten
@@ -642,7 +644,7 @@ export class HomematicIPPlugin {
 // Direkter Start
 const plugin = new HomematicIPPlugin();
 plugin.start().catch((err) => {
-  console.error('Plugin-Start fehlgeschlagen:', err.message);
+  console.error("Plugin-Start fehlgeschlagen:", err.message);
   process.exit(1);
 });
 ```
@@ -769,11 +771,11 @@ fi
 
 Alle Module die Dateipfade nutzen muessen `DATA_DIR` beruecksichtigen:
 
-| Modul | Aktueller Pfad | Neuer Pfad |
-|---|---|---|
-| ScheduleManager | `schedules/` | `${DATA_DIR}/schedules/` |
-| AreaManager | `areas.json` | `${DATA_DIR}/areas.json` |
-| Upload-Verzeichnis | `uploads/` | `${DATA_DIR}/uploads/` |
+| Modul              | Aktueller Pfad | Neuer Pfad               |
+| ------------------ | -------------- | ------------------------ |
+| ScheduleManager    | `schedules/`   | `${DATA_DIR}/schedules/` |
+| AreaManager        | `areas.json`   | `${DATA_DIR}/areas.json` |
+| Upload-Verzeichnis | `uploads/`     | `${DATA_DIR}/uploads/`   |
 
 ### 7.2 Anpassung in den Modulen
 
@@ -797,25 +799,25 @@ constructor(filePath) {
 
 Datei: `tests/connectApiClient.test.js`
 
-| Test | Beschreibung |
-|---|---|
-| `sendet PluginMessage-Envelope korrekt` | Prueft pluginId, id (UUID), type, body |
-| `beantwortet PLUGIN_STATE_REQUEST mit READY` | Simuliert eingehende Nachricht, prueft Antwort |
+| Test                                         | Beschreibung                                       |
+| -------------------------------------------- | -------------------------------------------------- |
+| `sendet PluginMessage-Envelope korrekt`      | Prueft pluginId, id (UUID), type, body             |
+| `beantwortet PLUGIN_STATE_REQUEST mit READY` | Simuliert eingehende Nachricht, prueft Antwort     |
 | `loest pending Request bei passender ID auf` | Sendet Request, simuliert Response mit gleicher ID |
-| `wirft Fehler bei Timeout` | Sendet Request, wartet auf Timeout |
-| `verarbeitet HMIP_SYSTEM_EVENT korrekt` | Simuliert Event-Transaction, prueft Event-Emission |
-| `normalisiert Geraete aus Systemstatus` | Mock-Systemstatus, prueft HmipDevice-Format |
-| `liest Token aus /TOKEN Datei` | Mock-Dateisystem, prueft Token-Lesung |
-| `reconnect bei Verbindungsabbruch` | Simuliert WebSocket-Close, prueft Reconnect |
+| `wirft Fehler bei Timeout`                   | Sendet Request, wartet auf Timeout                 |
+| `verarbeitet HMIP_SYSTEM_EVENT korrekt`      | Simuliert Event-Transaction, prueft Event-Emission |
+| `normalisiert Geraete aus Systemstatus`      | Mock-Systemstatus, prueft HmipDevice-Format        |
+| `liest Token aus /TOKEN Datei`               | Mock-Dateisystem, prueft Token-Lesung              |
+| `reconnect bei Verbindungsabbruch`           | Simuliert WebSocket-Close, prueft Reconnect        |
 
 ### 8.2 Unit-Tests fuer HmipClient-Interface
 
 Datei: `tests/hmipClient.test.js`
 
-| Test | Beschreibung |
-|---|---|
-| `CloudClient implementiert HmipClient` | Prueft alle Interface-Methoden |
-| `ConnectApiClient implementiert HmipClient` | Prueft alle Interface-Methoden |
+| Test                                               | Beschreibung                                             |
+| -------------------------------------------------- | -------------------------------------------------------- |
+| `CloudClient implementiert HmipClient`             | Prueft alle Interface-Methoden                           |
+| `ConnectApiClient implementiert HmipClient`        | Prueft alle Interface-Methoden                           |
 | `DeviceController funktioniert mit beiden Clients` | Gleicher Test mit verschiedenen Client-Implementierungen |
 
 ### 8.3 Integrationstests
@@ -824,12 +826,12 @@ Datei: `tests/connectApiIntegration.test.js`
 
 Mock-WebSocket-Server simuliert die HCU:
 
-| Test | Beschreibung |
-|---|---|
+| Test                        | Beschreibung                           |
+| --------------------------- | -------------------------------------- |
 | `Verbindung mit Auth-Token` | WebSocket-Verbindung + Header-Pruefung |
-| `getSystemState Roundtrip` | Request → Mock-Response → Ergebnis |
-| `setSetPointTemperature` | Request-Body + Path pruefung |
-| `System-Event Verarbeitung` | Mock-Event → Event-Handler aufgerufen |
+| `getSystemState Roundtrip`  | Request → Mock-Response → Ergebnis     |
+| `setSetPointTemperature`    | Request-Body + Path pruefung           |
+| `System-Event Verarbeitung` | Mock-Event → Event-Handler aufgerufen  |
 
 ---
 
@@ -849,18 +851,18 @@ graph TD
     S9 --> S10["Schritt 10<br/>Config-Template"]
 ```
 
-| Schritt | Beschreibung | Geschaetzte Dateien |
-|---|---|---|
-| 1 | CCU3-Code entfernen (addon/, local/, public/, server.js) | Loeschen: ~15 Dateien |
-| 2 | HmipClient Interface definieren | Neu: `src/client/hmipClient.js` |
-| 3 | CloudClient refactoren auf HmipClient | Aendern: `src/client/cloudClient.js` |
-| 4 | ConnectApiClient implementieren | Neu: `src/client/connectApiClient.js`, `src/client/connectApiAuth.js` |
-| 5 | DeviceController anpassen | Aendern: `src/devices/deviceController.js` |
-| 6 | Plugin-Haupteinstieg umschreiben | Aendern: `src/index.js` |
-| 7 | Dockerfile + Build-Script + .dockerignore | Neu: `Dockerfile`, `scripts/build-hcu-plugin.sh`, `.dockerignore` |
-| 8 | Pfade konfigurierbar (DATA_DIR) | Aendern: ScheduleManager, AreaManager |
-| 9 | Tests schreiben | Neu: 3 Test-Dateien |
-| 10 | Config-Template fuer HCU-UI | In ConnectApiClient (bereits in Schritt 4) |
+| Schritt | Beschreibung                                             | Geschaetzte Dateien                                                   |
+| ------- | -------------------------------------------------------- | --------------------------------------------------------------------- |
+| 1       | CCU3-Code entfernen (addon/, local/, public/, server.js) | Loeschen: ~15 Dateien                                                 |
+| 2       | HmipClient Interface definieren                          | Neu: `src/client/hmipClient.js`                                       |
+| 3       | CloudClient refactoren auf HmipClient                    | Aendern: `src/client/cloudClient.js`                                  |
+| 4       | ConnectApiClient implementieren                          | Neu: `src/client/connectApiClient.js`, `src/client/connectApiAuth.js` |
+| 5       | DeviceController anpassen                                | Aendern: `src/devices/deviceController.js`                            |
+| 6       | Plugin-Haupteinstieg umschreiben                         | Aendern: `src/index.js`                                               |
+| 7       | Dockerfile + Build-Script + .dockerignore                | Neu: `Dockerfile`, `scripts/build-hcu-plugin.sh`, `.dockerignore`     |
+| 8       | Pfade konfigurierbar (DATA_DIR)                          | Aendern: ScheduleManager, AreaManager                                 |
+| 9       | Tests schreiben                                          | Neu: 3 Test-Dateien                                                   |
+| 10      | Config-Template fuer HCU-UI                              | In ConnectApiClient (bereits in Schritt 4)                            |
 
 ## Commit-Strategie
 

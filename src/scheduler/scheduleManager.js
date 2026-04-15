@@ -162,9 +162,7 @@ export class ScheduleManager {
     return (
       Object.values(this.schedules).find(
         (s) =>
-          s.source &&
-          s.source.type === type &&
-          s.source.fileName === fileName,
+          s.source && s.source.type === type && s.source.fileName === fileName,
       ) || null
     );
   }
