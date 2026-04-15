@@ -6,6 +6,8 @@
   "type": "module",
   "scripts": {
     "start": "node src/index.js",
+    "build:hcu": "./scripts/build-hcu-plugin.sh",
+    "auth:hcu": "node scripts/auth-hcu.js",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
