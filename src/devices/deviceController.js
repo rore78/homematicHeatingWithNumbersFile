@@ -1,265 +1,147 @@
-import CloudClient from "../cloud/cloudClient.js";
-import LocalClient from "../local/localClient.js";
+import { isHmipClient } from "../client/hmipClient.js";
 
 /**
  * Device Controller
- * Abstrahiert die Gerätesteuerung für Cloud- und Local-Verbindungen
+ * Abstrahiert die Geraetesteuerung ueber das HmipClient-Interface.
+ *
+ * Arbeitet einheitlich mit CloudClient (REST) und ConnectApiClient
+ * (WebSocket) -- kein instanceof-Check mehr noetig.
  */
 export class DeviceController {
   constructor(client) {
+    if (!isHmipClient(client)) {
+      throw new Error(
+        "DeviceController benoetigt einen Client der das HmipClient-Interface implementiert",
+      );
+    }
     this.client = client;
-    this.isCloud = client instanceof CloudClient;
-    this.isLocal = client instanceof LocalClient;
   }
 
   /**
-   * Ruft alle Geräte ab
-   * @returns {Promise<Array>} - Liste der Geräte
+   * Ruft alle Geraete ab.
+   * @returns {Promise<Array>}
    */
   async getDevices() {
     try {
-      const devices = await this.client.getDevices();
-      return this._normalizeDevices(devices);
+      return await this.client.getDevices();
     } catch (error) {
-      throw new Error(`Fehler beim Abrufen der Geräte: ${error.message}`);
+      throw new Error(`Fehler beim Abrufen der Geraete: ${error.message}`);
     }
   }
 
   /**
-   * Ruft ein spezifisches Gerät ab
-   * @param {string} deviceId - Geräte-ID
-   * @returns {Promise<object>} - Geräteinformationen
+   * Ruft ein spezifisches Geraet ab.
+   * @param {string} deviceId
+   * @returns {Promise<object>}
    */
   async getDevice(deviceId) {
     try {
-      const device = await this.client.getDevice(deviceId);
-      return this._normalizeDevice(device);
+      return await this.client.getDevice(deviceId);
     } catch (error) {
-      throw new Error(`Fehler beim Abrufen des Geräts: ${error.message}`);
+      throw new Error(`Fehler beim Abrufen des Geraets: ${error.message}`);
     }
   }
 
   /**
-   * Ruft den Status eines Geräts ab
-   * @param {string} deviceId - Geräte-ID
-   * @returns {Promise<object>} - Gerätestatus
+   * Ruft den Status eines Geraets ab. Nutzt das normalisierte HmipDevice-Format.
+   * @param {string} deviceId
+   * @returns {Promise<object>}
    */
   async getDeviceState(deviceId) {
     try {
-      if (this.isLocal) {
-        return await this.client.getDeviceState(deviceId);
-      } else {
-        const device = await this.client.getDevice(deviceId);
-        return {
-          id: device.id,
-          name: device.label || device.name || "",
-          type: device.type || "",
-          state: device.functionalChannels || {},
-        };
-      }
+      const device = await this.client.getDevice(deviceId);
+      return {
+        id: device.id,
+        name: device.name || "",
+        type: device.type || "",
+        state: device.channels || {},
+      };
     } catch (error) {
-      throw new Error(`Fehler beim Abrufen des Gerätestatus: ${error.message}`);
+      throw new Error(`Fehler beim Abrufen des Geraetestatus: ${error.message}`);
     }
   }
 
   /**
-   * Schaltet ein Gerät ein/aus
-   * @param {string} deviceId - Geräte-ID
-   * @param {boolean} on - true = ein, false = aus
+   * Schaltet ein Geraet ein/aus.
+   * @param {string} deviceId
+   * @param {boolean} on
    * @returns {Promise<boolean>}
    */
   async setSwitchState(deviceId, on) {
     try {
-      if (this.isCloud) {
-        await this.client.setSwitchState(deviceId, on);
-        return true;
-      } else {
-        return await this.client.setSwitchState(deviceId, on);
-      }
+      await this.client.setSwitchState(deviceId, on);
+      return true;
     } catch (error) {
-      throw new Error(`Fehler beim Schalten des Geräts: ${error.message}`);
+      throw new Error(`Fehler beim Schalten des Geraets: ${error.message}`);
     }
   }
 
   /**
-   * Setzt die Helligkeit eines Dimmers
-   * @param {string} deviceId - Geräte-ID
-   * @param {number} level - Helligkeit (0-1.0 oder 0-100)
-   * @returns {Promise<boolean>}
-   */
-  async setDimLevel(deviceId, level) {
-    try {
-      // Normalisiere Level auf 0-1.0 Bereich
-      const normalizedLevel = level > 1.0 ? level / 100 : level;
-
-      if (this.isCloud) {
-        await this.client.setDimLevel(deviceId, normalizedLevel);
-        return true;
-      } else {
-        return await this.client.setDimLevel(deviceId, normalizedLevel);
-      }
-    } catch (error) {
-      throw new Error(`Fehler beim Setzen der Helligkeit: ${error.message}`);
-    }
-  }
-
-  /**
-   * Setzt die Temperatur eines Thermostats
-   * @param {string} deviceId - Geräte-ID
-   * @param {number} temperature - Temperatur in °C
+   * Setzt die Temperatur (Zieltemperatur).
+   * @param {string} deviceId - Geraete- oder Gruppen-ID (client-abhaengig)
+   * @param {number} temperature - °C
    * @returns {Promise<boolean>}
    */
   async setTemperature(deviceId, temperature) {
     try {
-      if (this.isCloud) {
-        await this.client.setTemperature(deviceId, temperature);
-        return true;
-      } else {
-        return await this.client.setTemperature(deviceId, temperature);
-      }
+      await this.client.setTemperature(deviceId, temperature);
+      return true;
     } catch (error) {
       throw new Error(`Fehler beim Setzen der Temperatur: ${error.message}`);
     }
   }
 
   /**
-   * Setzt einen benutzerdefinierten Geräteparameter
-   * @param {string} deviceId - Geräte-ID
-   * @param {string} parameter - Parametername
-   * @param {*} value - Parameterwert
+   * Aktiviert ein Heizprofil.
+   * @param {string} deviceId
+   * @param {number|string} profileNumber - 1-6 oder 'PROFILE_1' bis 'PROFILE_6'
    * @returns {Promise<boolean>}
    */
-  async setHeatingProfile(deviceId, profileNumber, options = {}) {
-    const { channel = "1" } = options;
-
-    if (![1, 2, 3].includes(profileNumber)) {
+  async setHeatingProfile(deviceId, profileNumber) {
+    const num =
+      typeof profileNumber === "string"
+        ? parseInt(profileNumber.replace("PROFILE_", ""), 10)
+        : profileNumber;
+    if (![1, 2, 3, 4, 5, 6].includes(num)) {
       throw new Error(
-        `Ungueltiges Geraeteprofil: ${profileNumber}. Erlaubt: 1, 2 oder 3.`,
+        `Ungueltiges Geraeteprofil: ${profileNumber}. Erlaubt: 1-6.`,
       );
     }
-
     try {
-      if (this.isCloud) {
-        return await this.client.setHeatingProfile(deviceId, profileNumber);
-      } else {
-        const targetId = this._resolveChannelId(deviceId, channel);
-        return await this.client.setHeatingProfile(targetId, profileNumber);
-      }
+      await this.client.setActiveProfile(deviceId, `PROFILE_${num}`);
+      return true;
     } catch (error) {
-      throw new Error(
-        `Fehler beim Setzen des Heizprofils: ${error.message}`,
-      );
-    }
-  }
-
-  async getHeatingProfile(deviceId, options = {}) {
-    const { channel = "1" } = options;
-
-    try {
-      if (this.isCloud) {
-        return await this.client.getHeatingProfile(deviceId);
-      } else {
-        const targetId = this._resolveChannelId(deviceId, channel);
-        return await this.client.getHeatingProfile(targetId);
-      }
-    } catch (error) {
-      throw new Error(
-        `Fehler beim Abrufen des Heizprofils: ${error.message}`,
-      );
-    }
-  }
-
-  _resolveChannelId(deviceId, channel) {
-    if (deviceId.includes(":")) return deviceId;
-    return `${deviceId}:${channel}`;
-  }
-
-  async setParameter(deviceId, parameter, value) {
-    try {
-      if (this.isCloud) {
-        // Für Cloud: channelId wird standardmäßig auf 1 gesetzt
-        await this.client.setDeviceData(deviceId, 1, parameter, value);
-        return true;
-      } else {
-        return await this.client.setValue(deviceId, parameter, value);
-      }
-    } catch (error) {
-      throw new Error(`Fehler beim Setzen des Parameters: ${error.message}`);
+      throw new Error(`Fehler beim Setzen des Heizprofils: ${error.message}`);
     }
   }
 
   /**
-   * Ruft einen Geräteparameter ab
-   * @param {string} deviceId - Geräte-ID
-   * @param {string} parameter - Parametername
-   * @returns {Promise<*>}
+   * Aktiviert/deaktiviert Boost.
+   * @param {string} deviceId
+   * @param {boolean} boost
+   * @returns {Promise<boolean>}
    */
-  async getParameter(deviceId, parameter) {
+  async setBoost(deviceId, boost) {
     try {
-      if (this.isLocal) {
-        return await this.client.getValue(deviceId, parameter);
-      } else {
-        const device = await this.client.getDevice(deviceId);
-        // Versuche Parameter aus den functionalChannels zu extrahieren
-        if (device.functionalChannels) {
-          for (const channel of device.functionalChannels) {
-            if (channel[parameter] !== undefined) {
-              return channel[parameter];
-            }
-          }
-        }
-        throw new Error(`Parameter ${parameter} nicht gefunden`);
-      }
+      await this.client.setBoost(deviceId, boost);
+      return true;
     } catch (error) {
-      throw new Error(`Fehler beim Abrufen des Parameters: ${error.message}`);
+      throw new Error(`Fehler beim Setzen des Boost-Modus: ${error.message}`);
     }
   }
 
   /**
-   * Normalisiert Geräte-Arrays für einheitliche Darstellung
-   * @param {Array} devices - Rohe Gerätedaten
-   * @returns {Array} - Normalisierte Geräte
-   * @private
+   * Setzt den Steuerungsmodus.
+   * @param {string} deviceId
+   * @param {string} controlMode - 'AUTOMATIC' oder 'MANUAL'
+   * @returns {Promise<boolean>}
    */
-  _normalizeDevices(devices) {
-    if (!Array.isArray(devices)) {
-      return [];
-    }
-    return devices.map((device) => this._normalizeDevice(device));
-  }
-
-  /**
-   * Normalisiert ein einzelnes Gerät
-   * @param {object} device - Rohe Gerätedaten
-   * @returns {object} - Normalisiertes Gerät
-   * @private
-   */
-  _normalizeDevice(device) {
-    if (this.isCloud) {
-      return {
-        id: device.id,
-        name: device.label || device.name || "",
-        type: device.type || "",
-        model: device.modelType || "",
-        manufacturer: device.manufacturer || "eQ-3",
-        firmware: device.firmwareVersion || "",
-        lowBat: device.lowBat || false,
-        unreach: device.unreach || false,
-        channels: device.functionalChannels || [],
-      };
-    } else {
-      // Local CCU Format
-      return {
-        id: device.ADDRESS || device.ID,
-        name: device.NAME || "",
-        type: device.TYPE || "",
-        model: device.TYPE || "",
-        manufacturer: "eQ-3",
-        firmware: device.FIRMWARE || "",
-        lowBat: device.LOWBAT || false,
-        unreach: device.UNREACH || false,
-        channels: [],
-      };
+  async setControlMode(deviceId, controlMode) {
+    try {
+      await this.client.setControlMode(deviceId, controlMode);
+      return true;
+    } catch (error) {
+      throw new Error(`Fehler beim Setzen des Steuerungsmodus: ${error.message}`);
     }
   }
 }
