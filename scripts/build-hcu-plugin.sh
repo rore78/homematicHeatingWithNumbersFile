@@ -28,8 +28,13 @@ if ! docker buildx version >/dev/null 2>&1; then
 fi
 
 # Build
+# --provenance=false und --sbom=false verhindern, dass buildx zusaetzliche
+# Attestation-Manifeste (platform=unknown/unknown) erzeugt. Diese wuerden
+# beim HCU-Plugin-Import als "Plugin ist nicht valide" abgelehnt.
 docker buildx build \
   --platform linux/arm64 \
+  --provenance=false \
+  --sbom=false \
   --tag "${IMAGE_NAME}:${VERSION}" \
   --tag "${IMAGE_NAME}:latest" \
   --load \

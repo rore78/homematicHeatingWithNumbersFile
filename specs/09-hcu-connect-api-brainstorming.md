@@ -118,3 +118,4 @@ Im Docker-Container ist nur `/data` persistent (gemountet von der HCU).
 
 - [x] **Alles klar, schreibe die Spezifikation** -- Alle Entscheidungen sind getroffen.
 - [ ] **Weitere Fragen** -- Ich habe noch offene Punkte (bitte als Kommentar angeben).
+ 
