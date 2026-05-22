@@ -224,6 +224,90 @@ describe("ScheduleManager", () => {
       await expect(manager.checkAndExecute()).resolves.toBeUndefined();
     });
 
+    it("schreibt bei wiederholtem Check im selben Fenster nicht erneut", async () => {
+      const mockController = {
+        setTemperature: vi.fn().mockResolvedValue(true),
+      };
+      manager.setDeviceController(mockController);
+
+      vi.setSystemTime(new Date("2025-01-15T12:00:00.000Z"));
+
+      const schedule = manager.createSchedule("Test", sampleData);
+      schedule.active = true;
+      manager.activeSchedules.add(schedule.id);
+
+      await manager.checkAndExecute();
+      vi.setSystemTime(new Date("2025-01-15T12:01:00.000Z"));
+      await manager.checkAndExecute();
+      vi.setSystemTime(new Date("2025-01-15T12:02:00.000Z"));
+      await manager.checkAndExecute();
+
+      expect(mockController.setTemperature).toHaveBeenCalledTimes(1);
+    });
+
+    it("schreibt erneut wenn sich die gewuenschte Temperatur aendert", async () => {
+      const mockController = {
+        setTemperature: vi.fn().mockResolvedValue(true),
+      };
+      manager.setDeviceController(mockController);
+
+      const data = [
+        {
+          area: "Wohnzimmer",
+          startDateTime: "2025-01-15T08:00:00.000Z",
+          endDateTime: "2025-01-15T12:00:00.000Z",
+          temperature: 21,
+        },
+        {
+          area: "Wohnzimmer",
+          startDateTime: "2025-01-15T12:00:00.000Z",
+          endDateTime: "2025-01-15T22:00:00.000Z",
+          temperature: 19,
+        },
+      ];
+
+      const schedule = manager.createSchedule("Wechsel", data);
+      schedule.active = true;
+      manager.activeSchedules.add(schedule.id);
+
+      vi.setSystemTime(new Date("2025-01-15T10:00:00.000Z"));
+      await manager.checkAndExecute();
+      vi.setSystemTime(new Date("2025-01-15T13:00:00.000Z"));
+      await manager.checkAndExecute();
+
+      expect(mockController.setTemperature).toHaveBeenCalledTimes(2);
+      expect(mockController.setTemperature).toHaveBeenNthCalledWith(
+        1,
+        "Wohnzimmer",
+        21,
+      );
+      expect(mockController.setTemperature).toHaveBeenNthCalledWith(
+        2,
+        "Wohnzimmer",
+        19,
+      );
+    });
+
+    it("schreibt nicht weiter wenn das Zeitfenster endet (Temperatur)", async () => {
+      const mockController = {
+        setTemperature: vi.fn().mockResolvedValue(true),
+        setHeatingProfile: vi.fn().mockResolvedValue(true),
+      };
+      manager.setDeviceController(mockController);
+
+      const schedule = manager.createSchedule("Test", sampleData);
+      schedule.active = true;
+      manager.activeSchedules.add(schedule.id);
+
+      vi.setSystemTime(new Date("2025-01-15T12:00:00.000Z"));
+      await manager.checkAndExecute();
+      vi.setSystemTime(new Date("2025-01-15T23:00:00.000Z"));
+      await manager.checkAndExecute();
+
+      expect(mockController.setTemperature).toHaveBeenCalledTimes(1);
+      expect(mockController.setHeatingProfile).not.toHaveBeenCalled();
+    });
+
     it("bedient andere Geraete trotz Fehler bei einem", async () => {
       const mockController = {
         setTemperature: vi

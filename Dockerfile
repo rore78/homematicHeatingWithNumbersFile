@@ -26,30 +26,11 @@ COPY package.json ./
 VOLUME /data
 
 # Plugin-Metadaten fuer die HCU
-LABEL de.eq3.hmip.plugin.metadata='{ \
-  "pluginId": "com.redlberger.hmip.heizungssteuerung", \
-  "issuer": "Roman Redlberger", \
-  "version": "1.0.0", \
-  "hcuMinVersion": "1.4.7", \
-  "scope": "LOCAL", \
-  "friendlyName": { \
-    "de": "Heizungssteuerung", \
-    "en": "Heating Control" \
-  }, \
-  "description": { \
-    "de": "Heizungszeitplaene aus Excel/Numbers-Dateien auslesen und Homematic IP Thermostate steuern.", \
-    "en": "Read heating schedules from Excel/Numbers files and control Homematic IP thermostats." \
-  }, \
-  "settings": {}, \
-  "image": "", \
-  "changelog": { \
-    "1.0.0": { \
-      "de": "Erstversion mit Connect API Unterstuetzung", \
-      "en": "Initial release with Connect API support" \
-    } \
-  }, \
-  "logsEnabled": true \
-}'
+# Schema: docs/connect-api-documentation-1.0.0.html (Label schema)
+# - settings: List<String> (nicht Object)
+# - changelog: String (nicht Object)
+# - image: Base64-String (weggelassen = optional)
+LABEL de.eq3.hmip.plugin.metadata='{"pluginId":"com.redlberger.hmip.heizungssteuerung","issuer":"Roman Redlberger","version":"1.0.0","hcuMinVersion":"1.4.7","scope":"LOCAL","friendlyName":{"de":"Heizungssteuerung","en":"Heating Control"},"description":{"de":"Heizungszeitplaene aus Excel/Numbers-Dateien auslesen und Homematic IP Thermostate steuern.","en":"Read heating schedules from Excel/Numbers files and control Homematic IP thermostats."},"settings":[],"changelog":"Version 1.0.0\n- Erstversion mit Connect API Unterstuetzung","logsEnabled":true}'
 
 # Standard-Umgebungsvariablen (in der HCU via /TOKEN, /CLIENTID, /SGTIN ueberschrieben)
 ENV HOMEMATIC_MODE=hcu

@@ -5,6 +5,21 @@ import HeatingProfile from "./heatingProfile.js";
 import AreaManager from "../areas/areaManager.js";
 import logger from "../utils/logger.js";
 
+function describeAction(scheduleItem) {
+  if (!scheduleItem) return null;
+  const controlMode = scheduleItem.controlMode || "temperature";
+  if (controlMode === "deviceProfile") {
+    return { kind: "profile", value: scheduleItem.deviceProfile };
+  }
+  return { kind: "temperature", value: scheduleItem.temperature };
+}
+
+function sameAction(a, b) {
+  if (!a && !b) return true;
+  if (!a || !b) return false;
+  return a.kind === b.kind && a.value === b.value;
+}
+
 /**
  * Zeitplan-Manager
  * Verwaltet Heizungszeitplaene mit Datum/Zeit-basierten Zeitraeumen.
@@ -22,6 +37,11 @@ export class ScheduleManager {
     this.activeSchedules = new Set();
     this.checkInterval = null;
     this.lastCheckTime = new Date();
+    // Letzte angewendete Aktion je (scheduleId|areaIdx|deviceId).
+    // Wir schreiben nur bei tatsaechlicher Aenderung an die HCU, damit
+    // parallel laufende Heizungs-Plugins (z.B. Heizungsautomatic) nicht
+    // alle 60 Sekunden ueberschrieben werden.
+    this.lastApplied = new Map();
 
     // Erstelle schedules Verzeichnis falls nicht vorhanden
     if (!fs.existsSync(this.schedulesDir)) {
@@ -207,6 +227,7 @@ export class ScheduleManager {
       existing.source = source;
     }
 
+    this._clearAppliedFor(id);
     this.saveSchedule(existing);
     return existing;
   }
@@ -247,9 +268,19 @@ export class ScheduleManager {
     schedule.active = false;
     schedule.updatedAt = new Date().toISOString();
     this.activeSchedules.delete(id);
+    this._clearAppliedFor(id);
     this.saveSchedule(schedule);
 
     return true;
+  }
+
+  _clearAppliedFor(scheduleId) {
+    const prefix = `${scheduleId}|`;
+    for (const key of this.lastApplied.keys()) {
+      if (key.startsWith(prefix)) {
+        this.lastApplied.delete(key);
+      }
+    }
   }
 
   /**
@@ -302,7 +333,12 @@ export class ScheduleManager {
   }
 
   /**
-   * Prüft und führt Aktionen aus
+   * Prüft und führt Aktionen aus.
+   *
+   * Schreibt pro Geraet nur bei Aenderung der gewuenschten Aktion gegenueber
+   * dem letzten Lauf. So koennen wir koexistieren mit Heizungs-Plugins, die
+   * dieselben Gruppen steuern, ohne deren Setpoints alle 60 Sekunden zu
+   * ueberschreiben.
    */
   async checkAndExecute() {
     if (!this.deviceController) {
@@ -310,7 +346,6 @@ export class ScheduleManager {
     }
 
     const now = new Date();
-    const lastCheck = this.lastCheckTime;
     this.lastCheckTime = now;
 
     for (const scheduleId of this.activeSchedules) {
@@ -319,54 +354,50 @@ export class ScheduleManager {
         continue;
       }
 
-      for (const area of schedule.areas) {
-        for (const scheduleItem of area.schedule) {
-          const startTime = new Date(scheduleItem.startDateTime);
-          const endTime = new Date(scheduleItem.endDateTime);
-          const controlMode = scheduleItem.controlMode || "temperature";
+      for (let areaIdx = 0; areaIdx < schedule.areas.length; areaIdx++) {
+        const area = schedule.areas[areaIdx];
 
-          if (now >= startTime && now <= endTime) {
-            for (const deviceId of area.devices) {
-              try {
-                if (controlMode === "deviceProfile") {
-                  await this.deviceController.setHeatingProfile(
-                    deviceId,
-                    scheduleItem.deviceProfile,
-                  );
-                } else {
-                  await this.deviceController.setTemperature(
-                    deviceId,
-                    scheduleItem.temperature,
-                  );
-                }
-              } catch (error) {
-                logger.error(
-                  `Fehler beim Steuern von Geraet ${deviceId}: ${error.message}`,
-                );
-              }
-            }
+        const activeItem = area.schedule.find((item) => {
+          const s = new Date(item.startDateTime);
+          const e = new Date(item.endDateTime);
+          return now >= s && now <= e;
+        });
+
+        const desired = describeAction(activeItem);
+
+        for (const deviceId of area.devices) {
+          const key = `${scheduleId}|${areaIdx}|${deviceId}`;
+          const previous = this.lastApplied.get(key) || null;
+
+          if (sameAction(previous, desired)) {
+            continue;
           }
 
-          // Profil-Zuruecksetzung: wenn deviceProfile-Zeitfenster gerade geendet hat
-          if (controlMode === "deviceProfile") {
-            const justEnded = endTime > lastCheck && endTime <= now;
-            const noActiveWindow = !area.schedule.some((item) => {
-              const s = new Date(item.startDateTime);
-              const e = new Date(item.endDateTime);
-              return now >= s && now <= e;
-            });
-
-            if (justEnded && noActiveWindow) {
-              for (const deviceId of area.devices) {
-                try {
-                  await this.deviceController.setHeatingProfile(deviceId, 1);
-                } catch (error) {
-                  logger.error(
-                    `Fehler beim Zuruecksetzen auf Profil 1 fuer Geraet ${deviceId}: ${error.message}`,
-                  );
-                }
+          try {
+            if (desired) {
+              if (desired.kind === "profile") {
+                await this.deviceController.setHeatingProfile(
+                  deviceId,
+                  desired.value,
+                );
+              } else {
+                await this.deviceController.setTemperature(
+                  deviceId,
+                  desired.value,
+                );
               }
+            } else if (previous && previous.kind === "profile") {
+              // deviceProfile-Fenster gerade beendet -> zurueck auf Profil 1.
+              // Bei Temperaturfenstern lassen wir den Setpoint stehen und
+              // ueberlassen einem ggf. parallelen Plugin die weitere Steuerung.
+              await this.deviceController.setHeatingProfile(deviceId, 1);
             }
+
+            this.lastApplied.set(key, desired);
+          } catch (error) {
+            logger.error(
+              `Fehler beim Steuern von Geraet ${deviceId}: ${error.message}`,
+            );
           }
         }
       }
